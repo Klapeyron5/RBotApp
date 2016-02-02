@@ -52,51 +52,56 @@ public class MainActivity extends Activity {
             }
         });
 
-        Button button3 = (Button) findViewById(R.id.button2);
+        Button button3 = (Button) findViewById(R.id.button3);
         button3.setOnTouchListener(new View.OnTouchListener() {
             MyThread1 thread;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.i(TAG, "button3 ACTION_DOWN");
                     thread = new MyThread1();
                     thread.setRunning(true);
                     thread.start();
                 }
                 if (event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.i(TAG, "button3 ACTION_UP");
                     boolean retry = true;
                     while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
                         try {
-                            thread.setRunning(false);
                             thread.join();
-                            retry = false;
                         } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
+                        retry = false;
+                    }
+                    try {
+                        button2_method();
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
                     }
                 }
                 return false;
             }
         });
 
-        Button button4 = (Button) findViewById(R.id.button3);
+        Button button4 = (Button) findViewById(R.id.button4);
         button4.setOnTouchListener(new View.OnTouchListener() {
             MyThread2 thread;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new MyThread2();
-                    thread.setRunning(true);
-                    thread.start();
+                    Log.i(TAG, "button4 ACTION_DOWN");
+
                 }
                 if(event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        try {
-                            thread.setRunning(false);
-                            thread.join();
-                            retry = false;
-                        } catch (InterruptedException e) {
-                        }
+                    Log.i(TAG, "button4 ACTION_UP");
+                    try {
+                        button2_method();
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
                     }
                 }
                 return false;
@@ -141,10 +146,9 @@ public class MainActivity extends Activity {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                 //      wheelsController.moveForward(4f, 0.5f);
                 //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
-                wheelsController.setWheelsSpeeds(4f,4f);
+                wheelsController.setWheelsSpeeds(20f,20f);
             }
         }
-        Log.i(TAG, "button2_method finished");
     }
 
     private void button2_method()  throws ControllerException {
@@ -156,7 +160,7 @@ public class MainActivity extends Activity {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                 //      wheelsController.moveForward(4f, 0.5f);
                 //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
-                wheelsController.setWheelsSpeeds(0,0);
+                wheelsController.setWheelsSpeeds(0.0f,0.0f);
             }
         }
         Log.i(TAG, "button2_method finished");
@@ -169,8 +173,8 @@ public class MainActivity extends Activity {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-          //      wheelsController.moveForward(4f, 0.5f);
-        //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
+                //      wheelsController.moveForward(4f, 0.5f);
+                //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
                 wheelsController.setWheelsSpeeds(4f,4f);
             }
         }
@@ -203,8 +207,11 @@ public class MainActivity extends Activity {
             while(true) {
                 if(running)
                     try {
-                        button3_method();
+                        button1_method();
+                        sleep(600);
                     } catch (ControllerException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 else
@@ -214,6 +221,7 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
+            Log.i(TAG, "setRunning("+b+")");
         }
     }
 

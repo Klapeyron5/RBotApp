@@ -29,31 +29,7 @@ public class MainActivity extends Activity {
         initRobot();
 
         Button button1 = (Button) findViewById(R.id.button1);
-        button1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    forwardMove();
-                } catch (ControllerException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        Button button2 = (Button) findViewById(R.id.button2);
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    stopMove();
-                } catch (ControllerException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        Button button3 = (Button) findViewById(R.id.button3);
-        button3.setOnTouchListener(new View.OnTouchListener() {
+        button1.setOnTouchListener(new View.OnTouchListener() {
             MyThread1 thread;
 
             @Override
@@ -61,6 +37,67 @@ public class MainActivity extends Activity {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     Log.i(TAG, "button3 ACTION_DOWN");
                     thread = new MyThread1();
+                    thread.setRunning(true);
+                    thread.start();
+                }
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.i(TAG, "button3 ACTION_UP");
+                    boolean retry = true;
+                    while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
+                        retry = false;
+                    }
+                    try {
+                        stopMove();
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return false;
+            }
+        });
+
+        Button button2 = (Button) findViewById(R.id.button2);
+        button2.setOnTouchListener(new View.OnTouchListener() {
+            MyThread2 thread;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.i(TAG, "button3 ACTION_DOWN");
+                    thread = new MyThread2();
+                    thread.setRunning(true);
+                    thread.start();
+                }
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.i(TAG, "button3 ACTION_UP");
+                    boolean retry = true;
+                    while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
+                        retry = false;
+                    }
+                    try {
+                        stopMove();
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return false;
+            }
+        });
+
+
+        Button button3 = (Button) findViewById(R.id.button3);
+        button3.setOnTouchListener(new View.OnTouchListener() {
+            MyThread3 thread;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.i(TAG, "button3 ACTION_DOWN");
+                    thread = new MyThread3();
                     thread.setRunning(true);
                     thread.start();
                 }
@@ -87,20 +124,19 @@ public class MainActivity extends Activity {
             }
         });
 
+
         Button button4 = (Button) findViewById(R.id.button4);
         button4.setOnTouchListener(new View.OnTouchListener() {
-            MyThread2 thread;
+            MyThread4 thread;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    Log.i(TAG, "button3 ACTION_DOWN");
-                    thread = new MyThread2();
+                    thread = new MyThread4();
                     thread.setRunning(true);
                     thread.start();
                 }
                 if (event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.i(TAG, "button3 ACTION_UP");
                     boolean retry = true;
                     while (retry) {
                         thread.setRunning(false);
@@ -158,8 +194,6 @@ public class MainActivity extends Activity {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                //      wheelsController.moveForward(4f, 0.5f);
-                //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
                 wheelsController.setWheelsSpeeds(20f,20f);
             }
         }
@@ -172,8 +206,6 @@ public class MainActivity extends Activity {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                //      wheelsController.moveForward(4f, 0.5f);
-                //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
                 wheelsController.setWheelsSpeeds(0.0f,0.0f);
             }
         }
@@ -187,12 +219,34 @@ public class MainActivity extends Activity {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                //      wheelsController.moveForward(4f, 0.5f);
-                //        TwoWheelState.Speed twoWheelsSpeed = new TwoWheelState.Speed(4,4);
                 wheelsController.setWheelsSpeeds(-20f,-20f);
             }
         }
         Log.i(TAG, "backMove() finished");
+    }
+
+    private void turnLeft() throws ControllerException {
+        if( robot.isControllerAvailable( BodyController.class ) )
+        {
+            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+            {
+                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                wheelsController.setWheelsSpeeds(-20f,20f);
+            }
+        }
+    }
+
+    private void turnRight() throws ControllerException {
+        if( robot.isControllerAvailable( BodyController.class ) )
+        {
+            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+            {
+                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                wheelsController.setWheelsSpeeds(20f,-20f);
+            }
+        }
     }
 
 
@@ -210,7 +264,7 @@ public class MainActivity extends Activity {
                     } catch (ControllerException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+            //            e.printStackTrace();
                     }
                 else
                     return;
@@ -236,7 +290,7 @@ public class MainActivity extends Activity {
                     } catch (ControllerException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+         //               e.printStackTrace();
                     }
                 else
                     return;
@@ -245,6 +299,57 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
+        }
+    }
+
+    class MyThread3 extends Thread {
+        private boolean running = false;
+
+        @Override
+        public void run() {
+            while(true) {
+                if(running)
+                    try {
+                        turnLeft();
+                        sleep(600);
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        //               e.printStackTrace();
+                    }
+                else
+                    return;
+            }
+        }
+
+        public void setRunning(boolean b) {
+            running = b;
+        }
+    }
+
+    class MyThread4 extends Thread {
+        private boolean running = false;
+
+        @Override
+        public void run() {
+            while(true) {
+                if(running)
+                    try {
+                        turnRight();
+                        sleep(600);
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        //            e.printStackTrace();
+                    }
+                else
+                    return;
+            }
+        }
+
+        public void setRunning(boolean b) {
+            running = b;
+            Log.i(TAG, "setRunning("+b+")");
         }
     }
 }

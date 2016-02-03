@@ -8,9 +8,12 @@ import android.view.View;
 import android.widget.Button;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
+import ru.rbot.android.bridge.service.robotcontroll.controllers.NeckController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.listeners.TwoWheelBodyControllerStateListener;
+import ru.rbot.android.bridge.service.robotcontroll.controllers.neck.data.Neck;
+import ru.rbot.android.bridge.service.robotcontroll.controllers.neck.data.NeckSegment;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.system.listeners.Listener;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
@@ -20,7 +23,6 @@ public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
     Robot robot;
-    BodyController bodyController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +159,63 @@ public class MainActivity extends Activity {
                 return false;
             }
         });
+
+
+        Button button5 = (Button) findViewById(R.id.button5);
+        button5.setOnTouchListener(new View.OnTouchListener() {
+            MyThread5 thread;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    thread = new MyThread5();
+                    thread.setRunning(true);
+                    thread.start();
+                }
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    boolean retry = true;
+                    while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
+                        try {
+                            thread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        retry = false;
+                    }
+                }
+                return false;
+            }
+        });
+
+        Button button6 = (Button) findViewById(R.id.button6);
+        button6.setOnTouchListener(new View.OnTouchListener() {
+            MyThread6 thread;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    thread = new MyThread6();
+                    thread.setRunning(true);
+                    thread.start();
+                }
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    boolean retry = true;
+                    while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
+                        try {
+                            thread.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        retry = false;
+                    }
+                }
+                return false;
+            }
+        });
     }
 
 
@@ -182,9 +241,62 @@ public class MainActivity extends Activity {
         };
 
         robot.setRobotStateListener(robotStateListener);
-        bodyController = new BodyController(this,robot);
         robot.start();
         Log.i(TAG, "init robot finished");
+    }
+
+    private void neckUp() {
+        try {
+            NeckController neckController = (NeckController) robot.getController(NeckController.class);
+            Neck neck = neckController.getNeck();
+            int neckSegmentsCount = neck.getSegmentsCount();
+            NeckSegment neckSegment = neck.getNeckSegment(0);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(0.5f);
+
+            neckSegment = neck.getNeckSegment(1);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(0.5f);
+
+            neckSegment = neck.getNeckSegment(2);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(0.5f);
+
+        //    neckSegment.move();
+            neckController.refreshNeckPosition();
+        } catch (ControllerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void neckDown() {
+        try {
+            NeckController neckController = (NeckController) robot.getController(NeckController.class);
+            Neck neck = neckController.getNeck();
+            int neckSegmentsCount = neck.getSegmentsCount();
+            NeckSegment neckSegment = neck.getNeckSegment(0);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(1f);
+
+            neckSegment = neck.getNeckSegment(1);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(0.0f);
+
+            neckSegment = neck.getNeckSegment(2);
+            neckSegment.setFlag((byte) 0x02);
+            neckSegment.setSpeed(5);
+            neckSegment.setAngle(1f);
+
+            //    neckSegment.move();
+            neckController.refreshNeckPosition();
+        } catch (ControllerException e) {
+            e.printStackTrace();
+        }
     }
 
     private void forwardMove()  throws ControllerException {
@@ -273,7 +385,6 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
-            Log.i(TAG, "setRunning("+b+")");
         }
     }
 
@@ -349,7 +460,52 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
-            Log.i(TAG, "setRunning("+b+")");
+        }
+    }
+
+    class MyThread5 extends Thread {
+        private boolean running = false;
+
+        @Override
+        public void run() {
+            while(true) {
+                if(running)
+                    try {
+                        neckUp();
+                        sleep(600);
+                    } catch (InterruptedException e) {
+                        //            e.printStackTrace();
+                    }
+                else
+                    return;
+            }
+        }
+
+        public void setRunning(boolean b) {
+            running = b;
+        }
+    }
+
+    class MyThread6 extends Thread {
+        private boolean running = false;
+
+        @Override
+        public void run() {
+            while(true) {
+                if(running)
+                    try {
+                        neckDown();
+                        sleep(600);
+                    } catch (InterruptedException e) {
+                        //            e.printStackTrace();
+                    }
+                else
+                    return;
+            }
+        }
+
+        public void setRunning(boolean b) {
+            running = b;
         }
     }
 }

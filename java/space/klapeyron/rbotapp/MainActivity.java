@@ -23,12 +23,14 @@ public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
     Robot robot;
+    LowLevelNavigationMethods lowLevelNavigationMethods;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         initRobot();
+        lowLevelNavigationMethods = new LowLevelNavigationMethods(robot);
 
         Button button1 = (Button) findViewById(R.id.button1);
         button1.setOnTouchListener(new View.OnTouchListener() {
@@ -216,6 +218,34 @@ public class MainActivity extends Activity {
                 return false;
             }
         });
+
+        Button button7 = (Button) findViewById(R.id.button7);
+        button7.setOnTouchListener(new View.OnTouchListener() {
+            ThreadForSimpleNavigationButtons thread;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.FORWARD_MOVE);
+                    thread.setRunning(true);
+                    thread.start();
+                }
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    boolean retry = true;
+                    while (retry) {
+                        thread.setRunning(false);
+                        thread.interrupt();
+                        retry = false;
+                    }
+                    try {
+                        stopMove();
+                    } catch (ControllerException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return false;
+            }
+        });
     }
 
 
@@ -299,7 +329,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void forwardMove()  throws ControllerException {
+    private void forwardMove() throws ControllerException {
         if( robot.isControllerAvailable( BodyController.class ) )
         {
             BodyController bodyController = (BodyController) robot.getController( BodyController.class );
@@ -311,7 +341,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void stopMove()  throws ControllerException {
+    private void stopMove() throws ControllerException {
         if( robot.isControllerAvailable( BodyController.class ) )
         {
             BodyController bodyController = (BodyController) robot.getController( BodyController.class );
@@ -498,6 +528,35 @@ public class MainActivity extends Activity {
                         sleep(600);
                     } catch (InterruptedException e) {
                         //            e.printStackTrace();
+                    }
+                else
+                    return;
+            }
+        }
+
+        public void setRunning(boolean b) {
+            running = b;
+        }
+    }
+
+
+    class ThreadForSimpleNavigationButtons extends Thread {
+        private boolean running = false;
+        private String lowLevelNavigationKey;
+
+        ThreadForSimpleNavigationButtons(String k) {
+            lowLevelNavigationKey = k;
+        }
+
+        @Override
+        public void run() {
+            while(true) {
+                if(running)
+                    try {
+                        lowLevelNavigationMethods.runOnKey(lowLevelNavigationKey);
+                        sleep(600);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 else
                     return;

@@ -1,5 +1,7 @@
 package space.klapeyron.rbotapp;
 
+import android.util.Log;
+
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
@@ -20,6 +22,7 @@ public class LowLevelNavigationMethods {
         try {
             switch (key) {
                 case FORWARD_MOVE:
+      //              Log.i(MainActivity.TAG, "switch---->>");
                     forwardMove();
                     break;
                 case STOP_MOVE:

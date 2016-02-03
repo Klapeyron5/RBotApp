@@ -24,169 +24,25 @@ public class MainActivity extends Activity {
         lowLevelNavigationMethods = new LowLevelNavigationMethods(robot);
 
         Button button1 = (Button) findViewById(R.id.button1);
-        button1.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.FORWARD_MOVE);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        retry = false;
-                    }
-                    lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
-                }
-                return false;
-            }
-        });
+        button1.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.FORWARD_MOVE));
 
         Button button2 = (Button) findViewById(R.id.button2);
-        button2.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.BACK_MOVE);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        retry = false;
-                    }
-                    lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
-                }
-                return false;
-            }
-        });
+        button2.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.BACK_MOVE));
 
 
         Button button3 = (Button) findViewById(R.id.button3);
-        button3.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.TURN_LEFT);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        retry = false;
-                    }
-                    lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
-                }
-                return false;
-            }
-        });
+        button3.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.TURN_LEFT));
 
 
         Button button4 = (Button) findViewById(R.id.button4);
-        button4.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.TURN_RIGHT);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        retry = false;
-                    }
-                    lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
-                }
-                return false;
-            }
-        });
+        button4.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.TURN_RIGHT));
 
 
         Button button5 = (Button) findViewById(R.id.button5);
-        button5.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.NECK_UP);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        retry = false;
-                    }
-                }
-                return false;
-            }
-        });
+        button5.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.NECK_UP));
 
         Button button6 = (Button) findViewById(R.id.button6);
-        button6.setOnTouchListener(new View.OnTouchListener() {
-            ThreadForSimpleNavigationButtons thread;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.NECK_DOWN);
-                    thread.setRunning(true);
-                    thread.start();
-                }
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    boolean retry = true;
-                    while (retry) {
-                        thread.setRunning(false);
-                        thread.interrupt();
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        retry = false;
-                    }
-                }
-                return false;
-            }
-        });
+        button6.setOnTouchListener(new ButtonTouch(LowLevelNavigationMethods.NECK_DOWN));
     }
 
 
@@ -242,6 +98,63 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
+        }
+    }
+
+    View.OnTouchListener buttonTouch = new View.OnTouchListener() {
+        ThreadForSimpleNavigationButtons thread;
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                thread = new ThreadForSimpleNavigationButtons(LowLevelNavigationMethods.NECK_DOWN);
+                thread.setRunning(true);
+                thread.start();
+            }
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                boolean retry = true;
+                while (retry) {
+                    thread.setRunning(false);
+                    thread.interrupt();
+                    try {
+                        thread.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    retry = false;
+                }
+            }
+            return false;
+        }
+    };
+
+
+
+    class ButtonTouch implements View.OnTouchListener {
+        private ThreadForSimpleNavigationButtons thread;
+        private String key;
+
+        ButtonTouch(String k) {
+            key = k;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                thread = new ThreadForSimpleNavigationButtons(key);
+                thread.setRunning(true);
+                thread.start();
+            }
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                boolean retry = true;
+                while (retry) {
+                    thread.setRunning(false);
+                    thread.interrupt();
+                    retry = false;
+                }
+                lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
+            }
+            return false;
         }
     }
 }

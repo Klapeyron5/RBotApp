@@ -4,31 +4,45 @@
     android:layout_height="match_parent">
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
         android:text="One call: forward"
         android:id="@+id/button1"
         android:layout_gravity="center_horizontal" />
 
     <Button
-        android:layout_width="161dp"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
         android:text="One call: stop"
         android:id="@+id/button2"
         android:layout_gravity="center_horizontal" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
-        android:text="New Button"
+        android:text="Forward"
         android:id="@+id/button3"
         android:layout_gravity="center_horizontal" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
-        android:text="New Button"
+        android:text="Back"
         android:id="@+id/button4"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:text="Turn left"
+        android:id="@+id/button"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:text="Turn right"
+        android:id="@+id/button5"
         android:layout_gravity="center_horizontal" />
 
     <EditText

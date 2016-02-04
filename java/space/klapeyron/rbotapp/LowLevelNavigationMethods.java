@@ -1,26 +1,16 @@
 package space.klapeyron.rbotapp;
 
-import android.util.Log;
-
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.NeckController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
-import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
-import ru.rbot.android.bridge.service.robotcontroll.controllers.body.listeners.TwoWheelBodyControllerStateListener;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.neck.data.Neck;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.neck.data.NeckSegment;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 
 public class LowLevelNavigationMethods {
+    MainActivity mainActivity;
     Robot robot;
-
-    private float passedWay;
-    private float currentX;
-    private float currentY;
-    private float wheelSpeedLeft;
-    private float wheelSpeedRight;
-    private float angle;
 
     public static final String FORWARD_MOVE = "FORWARD_MOVE";
     public static final String STOP_MOVE = "STOP_MOVE";
@@ -29,10 +19,12 @@ public class LowLevelNavigationMethods {
     public static final String TURN_RIGHT = "TURN_RIGHT";
     public static final String NECK_UP = "NECK_UP";
     public static final String NECK_DOWN = "NECK_DOWN";
-    public static final String WRITE_PATH = "WRITE_PATH";
+    public static final String LEFT = "LEFT";
+    public static final String RIGHT = "RIGHT";
 
-    LowLevelNavigationMethods(Robot r) {
-        robot = r;
+    LowLevelNavigationMethods(MainActivity m) {
+        mainActivity = m;
+        robot = m.robot;
     }
 
     public void runOnKey (String key) {
@@ -59,9 +51,11 @@ public class LowLevelNavigationMethods {
                 case NECK_DOWN:
                     neckDown();
                     break;
-//TODO
-                case WRITE_PATH:
-                    writePath();
+                case LEFT:
+                    left();
+                    break;
+                case RIGHT:
+                    right();
                     break;
             }
         } catch (ControllerException e) {
@@ -148,7 +142,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.setWheelsSpeeds(20f,-20f);
+                wheelsController.setWheelsSpeeds(20f, -20f);
             }
         }
     }
@@ -207,36 +201,27 @@ public class LowLevelNavigationMethods {
         }
     }
 
-    private void writePath() {
-        TwoWheelBodyControllerStateListener twoWheelBodyControllerStateListener = new TwoWheelBodyControllerStateListener() {
-            @Override
-            public void onWheelStateRecieved(TwoWheelState twoWheelState) {
-                passedWay = twoWheelState.getOdometryInfo().getPath();
-                currentX = twoWheelState.getOdometryInfo().getX();
-                currentY = twoWheelState.getOdometryInfo().getY();
-                wheelSpeedLeft = twoWheelState.getSpeed().getLWheelSpeed();
-                wheelSpeedRight = twoWheelState.getSpeed().getRWheelSpeed();
-                angle = twoWheelState.getOdometryInfo().getAngle();
-            }
-        };
+    private void left() throws ControllerException {
         if( robot.isControllerAvailable( BodyController.class ) )
         {
-            try {
-                BodyController bodyController = (BodyController) robot.getController( BodyController.class );
-                if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                {
-                    TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                    wheelsController.setListener(twoWheelBodyControllerStateListener,100);
-                }
-            } catch (ControllerException e) {
-                e.printStackTrace();
+            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+            {
+                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                wheelsController.turnAround(20f,3.14f);
             }
         }
-        Log.i(MainActivity.TAG,"Passed way: "+passedWay);
-        Log.i(MainActivity.TAG,"Current X: "+currentX);
-        Log.i(MainActivity.TAG,"Current Y: "+currentY);
-        Log.i(MainActivity.TAG,"Wheel speed left : "+wheelSpeedLeft);
-        Log.i(MainActivity.TAG,"Wheel speed right: "+wheelSpeedRight);
-        Log.i(MainActivity.TAG,"angle: "+angle);
+    }
+
+    private void right() throws ControllerException {
+        if( robot.isControllerAvailable( BodyController.class ) )
+        {
+            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+            {
+                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                wheelsController.turnAround(20f,-3.14f);
+            }
+        }
     }
 }

@@ -20,7 +20,6 @@ public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
     Robot robot;
-    TwoWheelBodyControllerStateListener twoWheelBodyControllerStateListener;
     LowLevelNavigationMethods lowLevelNavigationMethods;
 
     //TODO
@@ -43,6 +42,34 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         initRobot();
+        initConstructor();
+    }
+
+    private void initRobot() {
+        robot = new Robot(this);
+
+        RobotStateListener robotStateListener = new RobotStateListener() {
+            @Override
+            public void onRobotReady() {
+                Log.i(TAG, "onRobotReady");
+            }
+
+            @Override
+            public void onRobotInitError() {
+                Log.i(TAG, "onRobotInitError");
+            }
+
+            @Override
+            public void onRobotDisconnect() {
+                Log.i(TAG, "onRobotDisconnect");
+            }
+        };
+
+        robot.setRobotStateListener(robotStateListener);
+        robot.start();
+    }
+
+    private void initConstructor() {
         lowLevelNavigationMethods = new LowLevelNavigationMethods(this);
 
         path   = (TextView) findViewById(R.id.textView7);
@@ -63,13 +90,6 @@ public class MainActivity extends Activity {
 
         Button button4 = (Button) findViewById(R.id.button4);
         button4.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.TURN_RIGHT));
-
-        Button button5 = (Button) findViewById(R.id.button5);
-        button5.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.NECK_UP));
-
-        Button button6 = (Button) findViewById(R.id.button6);
-        button6.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.NECK_DOWN));
-
 
         Button button7 = (Button) findViewById(R.id.button7);
         button7.setOnClickListener(new View.OnClickListener() {
@@ -96,10 +116,10 @@ public class MainActivity extends Activity {
                 if (robot.isControllerAvailable(BodyController.class)) {
                     try {
                         BodyController bodyController = (BodyController) robot.getController(BodyController.class);
-                    if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
-                        TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                        wheelsController.turnAround(20f, -1.57f);
-                    }
+                        if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                            TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                            wheelsController.turnAround(20f, -1.57f);
+                        }
                     } catch (ControllerException e) {
                         e.printStackTrace();
                     }
@@ -116,7 +136,6 @@ public class MainActivity extends Activity {
             }
         });
     }
-
 
     private void odometryMethod() {
         TwoWheelBodyControllerStateListener twoWheelBodyControllerStateListener = new TwoWheelBodyControllerStateListener() {
@@ -152,32 +171,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-    private void initRobot() {
-        robot = new Robot(this);
-
-        RobotStateListener robotStateListener = new RobotStateListener() {
-            @Override
-            public void onRobotReady() {
-                Log.i(TAG, "onRobotReady");
-            }
-
-            @Override
-            public void onRobotInitError() {
-                Log.i(TAG, "onRobotInitError");
-            }
-
-            @Override
-            public void onRobotDisconnect() {
-                Log.i(TAG, "onRobotDisconnect");
-            }
-        };
-
-        robot.setRobotStateListener(robotStateListener);
-        robot.start();
-    }
-
-
     class navigationButtonTouch implements View.OnTouchListener {
         private ThreadForSimpleNavigationButtons thread;
         private String key;
@@ -205,7 +198,6 @@ public class MainActivity extends Activity {
             return false;
         }
     }
-
 
     class ThreadForSimpleNavigationButtons extends Thread {
         private boolean running = false;

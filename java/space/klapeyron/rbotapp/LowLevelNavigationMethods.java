@@ -15,6 +15,7 @@ public class LowLevelNavigationMethods {
     public static final String FORWARD_MOVE = "FORWARD_MOVE";
     public static final String STOP_MOVE = "STOP_MOVE";
     public static final String BACK_MOVE = "BACK_MOVE";
+    public static final String DISTANCE_FORWARD_MOVE = "DISTANCE_FORWARD_MOVE";
     public static final String TURN_LEFT = "TURN_LEFT";
     public static final String TURN_RIGHT = "TURN_RIGHT";
     public static final String NECK_UP = "NECK_UP";
@@ -38,6 +39,9 @@ public class LowLevelNavigationMethods {
                     break;
                 case BACK_MOVE:
                     backMove();
+                    break;
+                case DISTANCE_FORWARD_MOVE:
+                    moveForDistance();
                     break;
                 case TURN_LEFT:
                     turnLeft();
@@ -119,6 +123,18 @@ public class LowLevelNavigationMethods {
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                 wheelsController.setWheelsSpeeds(-20f,-20f);
+            }
+        }
+    }
+
+    private void moveForDistance() throws ControllerException {
+        if( robot.isControllerAvailable( BodyController.class ) )
+        {
+            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+            {
+                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                wheelsController.moveForward(20f,0.5f);
             }
         }
     }
@@ -208,7 +224,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.turnAround(20f,3.14f);
+                wheelsController.turnAround(20f,1.57f);
             }
         }
     }
@@ -220,7 +236,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.turnAround(20f,-3.14f);
+                wheelsController.turnAround(20f,-1.57f);
             }
         }
     }

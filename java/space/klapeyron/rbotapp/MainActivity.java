@@ -19,6 +19,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.listeners.RobotStateL
 public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
+    MainActivity link = this;
     Robot robot;
     LowLevelNavigationMethods lowLevelNavigationMethods;
 
@@ -43,6 +44,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         initRobot();
         initConstructor();
+        odometryMethod();
     }
 
     private void initRobot() {
@@ -127,12 +129,20 @@ public class MainActivity extends Activity {
             }
         });
 
-        Button button9 = (Button) findViewById(R.id.button9);
-        button9.setOnTouchListener(new View.OnTouchListener() {
+        Button button6 = (Button) findViewById(R.id.button6);
+        button6.setOnClickListener(new View.OnClickListener() {
+            LowLevelNavigationTasks lowLevelNavigationTasks = new LowLevelNavigationTasks(link,lowLevelNavigationMethods);
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
+            public void onClick(View v) {
+                lowLevelNavigationTasks.doTask();
+            }
+        });
+
+        Button button9 = (Button) findViewById(R.id.button9);
+        button9.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 odometryMethod();
-                return false;
             }
         });
     }

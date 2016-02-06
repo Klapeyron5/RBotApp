@@ -36,11 +36,7 @@ public class Navigation {
     int f;
     int i,j,k;
 
-    /*ArrayList consideredPoints = new ArrayList();
-    ArrayList newPoints = new ArrayList(); // Попытка создать динамический массив*/
-
-    int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n).
-    // int[][] newPoints = new int[m*n][4]; // Первые две строчки - координаты рассматриваемой точки. Вторые две - Координаты "материнской" точки, на которую ссылается данная.
+    int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n)
 
     public void getPath()
     {
@@ -54,10 +50,28 @@ public class Navigation {
         Path[k][0] = consideredPoints[k-1][0];
         Path[k][1] = consideredPoints[k-1][1];
 
-        for(i=0;i<(k+1);i++)
+        int Direction[] = new int[k];
+        for(i=0;i<k;i++)
         {
-            System.out.println("("+Path[i][0]+";"+Path[i][1]+")");
+            if ((Path[i+1][0]-Path[i][0])== 1)
+            {
+                Direction[i] = 0;
+            }
+            else if ((Path[i+1][1]-Path[i][1])== 1)
+            {
+                Direction[i] = 1;
+            }
+            else if ((Path[i+1][0]-Path[i][0])== -1)
+            {
+                Direction[i] = 2;
+            }
+            else if ((Path[i+1][1]-Path[i][1])== -1)
+            {
+                Direction[i] = 3;
+            }
         }
+        for(i=0;i<k;i++)
+            System.out.println(Direction[i]);
     }
     public void buildPath()
     {

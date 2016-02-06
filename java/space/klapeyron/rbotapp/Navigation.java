@@ -1,5 +1,7 @@
 package space.klapeyron.rbotapp;
 
+import java.util.ArrayList;
+
 public class Navigation {
     Navigation() {}
     /*int[][] landscape = {{1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -36,9 +38,11 @@ public class Navigation {
     int f;
     int i,j,k;
 
+    ArrayList<Integer> path = new ArrayList<Integer>();
+
     int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n)
 
-    public void getPath()
+    public ArrayList<Integer> getPath()
     {
         buildPath();
         int Path[][] = new int[k+1][2];
@@ -72,6 +76,30 @@ public class Navigation {
         }
         for(i=0;i<k;i++)
             System.out.println(Direction[i]);
+
+        path.add(1);
+        for(int i=1;i<Direction.length;i++) {
+            if(Direction[i] == Direction[i-1])
+                path.add(1);
+            else {
+                if (((Direction[i - 1] == 0) && (Direction[i] == 1)) ||
+                        ((Direction[i - 1] == 1) && (Direction[i] == 2)) ||
+                        ((Direction[i - 1] == 2) && (Direction[i] == 3)) ||
+                        ((Direction[i - 1] == 3) && (Direction[i] == 0))) {
+                    path.add(0);
+                    path.add(1);
+                }
+                else
+                    if(((Direction[i-1]==0)&&(Direction[i]==3))||
+                            ((Direction[i-1]==3)&&(Direction[i]==2))||
+                            ((Direction[i-1]==2)&&(Direction[i]==1))||
+                            ((Direction[i-1]==1)&&(Direction[i]==0))) {
+                        path.add(2);
+                        path.add(1);
+                    }
+            }
+        }
+        return path;
     }
     public void buildPath()
     {

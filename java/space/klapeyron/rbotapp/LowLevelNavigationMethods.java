@@ -1,5 +1,7 @@
 package space.klapeyron.rbotapp;
 
+import android.util.Log;
+
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.NeckController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -225,6 +227,8 @@ public class LowLevelNavigationMethods {
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                 wheelsController.turnAround(20f,1.57f);
+//                wheelsController.moveForward(29f,0.5f);
+                Log.i(MainActivity.TAG, "leftleftleft");
             }
         }
     }
@@ -236,7 +240,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.turnAround(20f,-1.57f);
+                wheelsController.turnAround(20f, -1.57f);
             }
         }
     }

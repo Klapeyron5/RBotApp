@@ -2,7 +2,6 @@ package space.klapeyron.rbotapp;
 
 import android.util.Log;
 
-import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 
 public class LowLevelNavigationTasks {
     MainActivity mainActivity;
@@ -18,6 +17,8 @@ public class LowLevelNavigationTasks {
     }
 
     public void setTask() {
+    //    lowLevelNavigationMethods.stopWheelsAction(LowLevelNavigationMethods.FORWARD_MOVE);
+    //    leftTask();
         forwardTask();
   /*      if(forwardTaskThread.isAlive()) {
             try {
@@ -26,7 +27,7 @@ public class LowLevelNavigationTasks {
                 e.printStackTrace();
             }
         }*/
-        Log.i(MainActivity.TAG,"Now on wait "+forwardTaskThread.isAlive());
+        Log.i(MainActivity.TAG,"Now on wait ");//+forwardTaskThread.isAlive());
    /*     while (forwardTaskThread.isAlive()) {
         }
         Log.i(MainActivity.TAG,"Now on left "+forwardTaskThread.isAlive());*/
@@ -34,6 +35,7 @@ public class LowLevelNavigationTasks {
     }
 
     public void leftTask() {
+   //     lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
         lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.LEFT);
     }
 
@@ -66,10 +68,12 @@ public class LowLevelNavigationTasks {
                         e.printStackTrace();
                     }
                     if(lowLevelNavigationTasks.mainActivity.passedWay - lowLevelNavigationTasks.startPath > 0.41f) {
-                        lowLevelNavigationTasks.lowLevelNavigationMethods.stopWheelsAction(LowLevelNavigationMethods.FORWARD_MOVE);
+              //          lowLevelNavigationTasks.lowLevelNavigationMethods.stopWheelsAction(LowLevelNavigationMethods.FORWARD_MOVE);
                         Log.i(MainActivity.TAG, "startPath: " + Float.toString(lowLevelNavigationTasks.startPath) + "  passedPath: " + Float.toString(lowLevelNavigationTasks.mainActivity.passedWay) + "  TASK: " + Float.toString(lowLevelNavigationTasks.mainActivity.passedWay - lowLevelNavigationTasks.startPath));
                         running = false;
+                        Log.i(MainActivity.TAG,"BEFORE LEFT");
                         leftTask();
+                        Log.i(MainActivity.TAG,"AFTER LEFT");
                         return;
                     }
                 }

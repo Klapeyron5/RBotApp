@@ -9,27 +9,48 @@ public class LowLevelNavigationTasks {
     LowLevelNavigationMethods lowLevelNavigationMethods;
     float startPath;
 
+    ForwardTaskThread forwardTaskThread;
+
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
         mainActivity = m;
         lowLevelNavigationMethods = l;
         startPath = mainActivity.passedWay;
     }
 
-    public void doTask() {
-        String key = LowLevelNavigationMethods.FORWARD_MOVE;
-        startPath = mainActivity.passedWay;
-        TaskThread taskThread;
-        taskThread = new TaskThread(key,this);
-        taskThread.setRunning(true);
-        taskThread.start();
+    public void setTask() {
+        forwardTask();
+  /*      if(forwardTaskThread.isAlive()) {
+            try {
+                forwardTaskThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }*/
+        Log.i(MainActivity.TAG,"Now on wait "+forwardTaskThread.isAlive());
+   /*     while (forwardTaskThread.isAlive()) {
+        }
+        Log.i(MainActivity.TAG,"Now on left "+forwardTaskThread.isAlive());*/
+    //    leftTask();
     }
 
-    class TaskThread extends Thread {
+    public void leftTask() {
+        lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.LEFT);
+    }
+
+    public void forwardTask() {
+        String key = LowLevelNavigationMethods.FORWARD_MOVE;
+        startPath = mainActivity.passedWay;
+        forwardTaskThread = new ForwardTaskThread(key,this);
+        forwardTaskThread.setRunning(true);
+        forwardTaskThread.start();
+    }
+
+    class ForwardTaskThread extends Thread {
         private boolean running = false;
         private String lowLevelNavigationKey;
         private LowLevelNavigationTasks lowLevelNavigationTasks;
 
-        TaskThread(String k,LowLevelNavigationTasks l) {
+        ForwardTaskThread(String k,LowLevelNavigationTasks l) {
             lowLevelNavigationKey = k;
             lowLevelNavigationTasks = l;
         }
@@ -44,12 +65,12 @@ public class LowLevelNavigationTasks {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-            //        if (startPath == 0)
-            //            startPath = mainActivity.passedWay;
-                    Log.i(MainActivity.TAG,"startPath: "+Float.toString(lowLevelNavigationTasks.startPath)+"  passedPath: "+Float.toString(lowLevelNavigationTasks.mainActivity.passedWay)+"  TASK: "+Float.toString(lowLevelNavigationTasks.startPath - lowLevelNavigationTasks.mainActivity.passedWay));
-                    if(lowLevelNavigationTasks.mainActivity.passedWay - lowLevelNavigationTasks.startPath > 0.5f) {
-                        running = false;
+                    if(lowLevelNavigationTasks.mainActivity.passedWay - lowLevelNavigationTasks.startPath > 0.41f) {
                         lowLevelNavigationTasks.lowLevelNavigationMethods.stopWheelsAction(LowLevelNavigationMethods.FORWARD_MOVE);
+                        Log.i(MainActivity.TAG, "startPath: " + Float.toString(lowLevelNavigationTasks.startPath) + "  passedPath: " + Float.toString(lowLevelNavigationTasks.mainActivity.passedWay) + "  TASK: " + Float.toString(lowLevelNavigationTasks.mainActivity.passedWay - lowLevelNavigationTasks.startPath));
+                        running = false;
+                        leftTask();
+                        return;
                     }
                 }
                 else
@@ -59,6 +80,10 @@ public class LowLevelNavigationTasks {
 
         public void setRunning(boolean b) {
             running = b;
+        }
+
+        public boolean isRunning() {
+            return running;
         }
     }
 }

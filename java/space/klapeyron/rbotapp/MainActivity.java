@@ -200,10 +200,11 @@ public class MainActivity extends Activity {
                 boolean retry = true;
                 while (retry) {
                     thread.setRunning(false);
+                    lowLevelNavigationMethods.stopWheelsAction(key);
                     thread.interrupt();
+        //            Log.i(TAG, "INTERRUPT");
                     retry = false;
                 }
-                lowLevelNavigationMethods.stopWheelsAction(key);
             }
             return false;
         }
@@ -222,6 +223,7 @@ public class MainActivity extends Activity {
             while(true) {
                 if(running)
                     try {
+          //              Log.i(TAG,"RUN");
                         lowLevelNavigationMethods.runOnKey(lowLevelNavigationKey);
                         sleep(600);
                     } catch (InterruptedException e) {
@@ -234,6 +236,7 @@ public class MainActivity extends Activity {
 
         public void setRunning(boolean b) {
             running = b;
+       //     Log.i(TAG,"running = "+running);
         }
     }
 }

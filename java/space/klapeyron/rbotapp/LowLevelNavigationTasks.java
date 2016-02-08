@@ -22,7 +22,7 @@ public class LowLevelNavigationTasks {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1,1,1};
+    int[] arrayPath = {1,2,1};
     ArrayList<Integer> path;//0-right; 1-forward;2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
@@ -35,74 +35,56 @@ public class LowLevelNavigationTasks {
 
     public void setTask() throws ControllerException {
         Navigation navigation = new Navigation();
-     //   path = navigation.getPath()ж
+        path = navigation.getPath();
 
-        path = new ArrayList<>();
-        arrayInList();//TODO
-    /*    int straightLineCoeff = 1;
-        for (int i = 1; i < path.size(); i++) {
-            switch (path.get(i)) {
-                case 0:
-                    right();
-                    break;
-                case 1:
-                    Log.i(MainActivity.TAG,Integer.toString(i));
-                    if (path.get(i - 1) == 1)
-                        straightLineCoeff++;
-                    if (i == path.size() - 1)
-                        distanceForwardThread(straightLineCoeff);
-                    else
-                        if (path.get(i + 1) != 1)
-              //              Log.i(MainActivity.TAG,"straight "+Integer.toString(straightLineCoeff));
-                            distanceForwardThread(straightLineCoeff);
-                    break;
-            }
-        }*/
+       // path = new ArrayList<>();
+       // arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
     }
 
     class TaskThread extends Thread {
-        int straightLineCoeff = 1;
         @Override
         public void run() {
+            int straightLineCoeff = 1;
+            distanceForwardThread(straightLineCoeff);
             for(int i=1;i<path.size();i++) {
                 try {
                     switch(path.get(i)) {
                         case 0:
                             right();
+                            sleep(2500);
                             break;
                         case 1:
                             if (path.get(i - 1) == 1)
                             straightLineCoeff++;
                             if (i == path.size() - 1) {
                                 distanceForwardThread(straightLineCoeff);
+                                straightLineCoeff = 1;
                             }
                             else
                                 if (path.get(i + 1) != 1) {
                                     distanceForwardThread(straightLineCoeff);
+                                    straightLineCoeff = 1;
                                 }
                             break;
                         case 2:
                             left();
+                            sleep(2500);
                             break;
                     }
-                } catch (ControllerException e) {}
-            }
-            try {
-                left();
-            } catch (ControllerException e) {
-                e.printStackTrace();
+                } catch (ControllerException e) {} catch (InterruptedException e) {}
             }
         }
     }
 
     private void distanceForwardThread(int straightLineCoeff) {
+        Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
         forwardThread = new ForwardThread(LowLevelNavigationMethods.FORWARD_MOVE,straightLineCoeff);
         forwardThread.start();
         try {
                 forwardThread.join();
-            Log.i(MainActivity.TAG, "forwardThread finished");
+                Log.i(MainActivity.TAG, "forwardThread finished");
         } catch (InterruptedException e) {}
     }
 

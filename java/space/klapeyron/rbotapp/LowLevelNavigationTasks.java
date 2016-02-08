@@ -2,6 +2,8 @@ package space.klapeyron.rbotapp;
 
 import android.util.Log;
 
+import java.util.ArrayList;
+
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
@@ -16,7 +18,8 @@ public class LowLevelNavigationTasks {
     Robot robot;
     ForwardTaskThread forwardTaskThread;
 
-    int[] path = {1,1,0,1,2,1,0};
+
+    ArrayList<Integer> path;// = {1,1,2,1,0,1,2}; //0-right; 1-forward;2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
         mainActivity = m;
@@ -27,24 +30,26 @@ public class LowLevelNavigationTasks {
     }
 
     public void setTask() {
+        Navigation navigation = new Navigation();
+        path = navigation.getPath();
         TaskThread taskThread = new TaskThread();
         taskThread.start();
     }
-    
+
     class TaskThread extends Thread {
         @Override
         public void run() {
-            for(int i=0;i<path.length;i++) {
+            for(int i=0;i<path.size();i++) {
                 try {
-                    switch(path[i]) {
+                    switch(path.get(i)) {
                         case 0:
-                            left();
+                            right();
                             break;
                         case 1:
                             distanceForward();
                             break;
                         case 2:
-                            right();
+                            left();
                             break;
                     }
                 } catch (ControllerException e) {}

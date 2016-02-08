@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     MainActivity link = this;
     Robot robot;
     LowLevelNavigationMethods lowLevelNavigationMethods;
+    TTSManager ttsManager = null;
 
     //TODO
     public TextView path;
@@ -30,6 +31,7 @@ public class MainActivity extends Activity {
     public TextView SpeedL;
     public TextView SpeedR;
     public TextView Angle;
+    public TextView Test_speech;
 
     float passedWay;
     float currentX;
@@ -42,6 +44,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
         initRobot();
         initConstructor();
         odometryMethod();
@@ -73,6 +76,9 @@ public class MainActivity extends Activity {
 
     private void initConstructor() {
         lowLevelNavigationMethods = new LowLevelNavigationMethods(this);
+        /*tts*/
+        ttsManager = new TTSManager();
+        ttsManager.init(this);
 
         path   = (TextView) findViewById(R.id.textView7);
         X      = (TextView) findViewById(R.id.textView8);
@@ -149,6 +155,15 @@ public class MainActivity extends Activity {
                 odometryMethod();
             }
         });
+
+        Button button10 = (Button) findViewById(R.id.button10);
+        button10.setOnClickListener(new View.OnClickListener(){
+            @Override
+        public void onClick(View v){
+                ttsManager.Greeting();
+            }
+        });
+
     }
 
     private void odometryMethod() {

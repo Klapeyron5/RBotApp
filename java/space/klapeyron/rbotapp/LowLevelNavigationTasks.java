@@ -77,24 +77,10 @@ public class LowLevelNavigationTasks {
                             straightLineCoeff++;
                             if (i == path.size() - 1) {
                                 distanceForwardThread(straightLineCoeff);
-                                try {
-                                    if(forwardThread.isAlive()) {
-                                        forwardThread.join();
-                                    }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
                             }
                             else
                                 if (path.get(i + 1) != 1) {
                                     distanceForwardThread(straightLineCoeff);
-                                    try {
-                                        if(forwardThread.isAlive()) {
-                                            forwardThread.join();
-                                        }
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
                                 }
                             break;
                         case 2:
@@ -102,25 +88,24 @@ public class LowLevelNavigationTasks {
                             break;
                     }
                 } catch (ControllerException e) {}
-
-             /*   try {
-                    sleep(3000);
-                } catch (InterruptedException e) {}*/
-
-                try {
-                    left();
-                } catch (ControllerException e) {
-                    e.printStackTrace();
-                }
             }
-            this.interrupt();
+            try {
+                left();
+            } catch (ControllerException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void distanceForwardThread(int straightLineCoeff) {
         forwardThread = new ForwardThread(LowLevelNavigationMethods.FORWARD_MOVE,straightLineCoeff);
         forwardThread.start();
+        try {
+                forwardThread.join();
+            Log.i(MainActivity.TAG, "forwardThread finished");
+        } catch (InterruptedException e) {}
     }
+
     class ForwardThread extends Thread {
         private String lowLevelNavigationKey;
         private float startPath;
@@ -144,7 +129,7 @@ public class LowLevelNavigationTasks {
                         e.printStackTrace();
                     }
                 else {
-                    lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
+            //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
                     Log.i(MainActivity.TAG, Float.toString(mainActivity.passedWay - startPath));
                     return;
                 }
@@ -171,7 +156,9 @@ public class LowLevelNavigationTasks {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                Log.i(MainActivity.TAG, "left move before");
                 wheelsController.turnAround(20f, 1.57f);
+                Log.i(MainActivity.TAG, "left move after");
             }
         }
     }

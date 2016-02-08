@@ -112,7 +112,9 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                Log.i(MainActivity.TAG, "stop move before");
                 wheelsController.setWheelsSpeeds(0.0f,0.0f);
+                Log.i(MainActivity.TAG, "stop move after");
             }
         }
     }

@@ -31,7 +31,6 @@ public class MainActivity extends Activity {
     public TextView SpeedL;
     public TextView SpeedR;
     public TextView Angle;
-    public TextView Test_speech;
 
     float passedWay;
     float currentX;

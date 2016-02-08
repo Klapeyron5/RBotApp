@@ -134,7 +134,11 @@ public class MainActivity extends Activity {
             LowLevelNavigationTasks lowLevelNavigationTasks = new LowLevelNavigationTasks(link,lowLevelNavigationMethods);
             @Override
             public void onClick(View v) {
-                lowLevelNavigationTasks.setTask();
+                try {
+                    lowLevelNavigationTasks.setTask();
+                } catch (ControllerException e) {
+                    e.printStackTrace();
+                }
             }
         });
 

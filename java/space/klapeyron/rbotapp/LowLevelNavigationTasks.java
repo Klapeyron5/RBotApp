@@ -17,9 +17,13 @@ public class LowLevelNavigationTasks {
     float startAngle;
     Robot robot;
     ForwardTaskThread forwardTaskThread;
+    ForwardThread forwardThread;
+
+    private final static float forwardDistance = 0.5f;
 
 
-    ArrayList<Integer> path;// = {1,1,2,1,0,1,2}; //0-right; 1-forward;2-left;
+    int[] arrayPath = {1,1,1};
+    ArrayList<Integer> path;//0-right; 1-forward;2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
         mainActivity = m;
@@ -29,35 +33,122 @@ public class LowLevelNavigationTasks {
         robot = mainActivity.robot;
     }
 
-    public void setTask() {
+    public void setTask() throws ControllerException {
         Navigation navigation = new Navigation();
-        path = navigation.getPath();
+     //   path = navigation.getPath()ж
+
+        path = new ArrayList<>();
+        arrayInList();//TODO
+    /*    int straightLineCoeff = 1;
+        for (int i = 1; i < path.size(); i++) {
+            switch (path.get(i)) {
+                case 0:
+                    right();
+                    break;
+                case 1:
+                    Log.i(MainActivity.TAG,Integer.toString(i));
+                    if (path.get(i - 1) == 1)
+                        straightLineCoeff++;
+                    if (i == path.size() - 1)
+                        distanceForwardThread(straightLineCoeff);
+                    else
+                        if (path.get(i + 1) != 1)
+              //              Log.i(MainActivity.TAG,"straight "+Integer.toString(straightLineCoeff));
+                            distanceForwardThread(straightLineCoeff);
+                    break;
+            }
+        }*/
         TaskThread taskThread = new TaskThread();
         taskThread.start();
     }
 
     class TaskThread extends Thread {
+        int straightLineCoeff = 1;
         @Override
         public void run() {
-            for(int i=0;i<path.size();i++) {
+            for(int i=1;i<path.size();i++) {
                 try {
                     switch(path.get(i)) {
                         case 0:
                             right();
                             break;
                         case 1:
-                            distanceForward();
+                            if (path.get(i - 1) == 1)
+                            straightLineCoeff++;
+                            if (i == path.size() - 1) {
+                                distanceForwardThread(straightLineCoeff);
+                                try {
+                                    if(forwardThread.isAlive()) {
+                                        forwardThread.join();
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            else
+                                if (path.get(i + 1) != 1) {
+                                    distanceForwardThread(straightLineCoeff);
+                                    try {
+                                        if(forwardThread.isAlive()) {
+                                            forwardThread.join();
+                                        }
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             break;
                         case 2:
                             left();
                             break;
                     }
                 } catch (ControllerException e) {}
-                try {
+
+             /*   try {
                     sleep(3000);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {}*/
+
+                try {
+                    left();
+                } catch (ControllerException e) {
+                    e.printStackTrace();
+                }
             }
             this.interrupt();
+        }
+    }
+
+    private void distanceForwardThread(int straightLineCoeff) {
+        forwardThread = new ForwardThread(LowLevelNavigationMethods.FORWARD_MOVE,straightLineCoeff);
+        forwardThread.start();
+    }
+    class ForwardThread extends Thread {
+        private String lowLevelNavigationKey;
+        private float startPath;
+        private float purposePath;
+
+        ForwardThread(String k, int straightLineCoeff) {
+            lowLevelNavigationKey = k;
+            startPath = mainActivity.passedWay;
+            purposePath = straightLineCoeff * LowLevelNavigationTasks.forwardDistance;
+        }
+
+        @Override
+        public void run() {
+            Log.i(MainActivity.TAG,"RUN");
+            while(true) {
+                if(mainActivity.passedWay - startPath < purposePath)
+                    try {
+                        lowLevelNavigationMethods.runOnKey(lowLevelNavigationKey);
+                        sleep(600);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                else {
+                    lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
+                    Log.i(MainActivity.TAG, Float.toString(mainActivity.passedWay - startPath));
+                    return;
+                }
+            }
         }
     }
 
@@ -95,6 +186,12 @@ public class LowLevelNavigationTasks {
                 wheelsController.turnAround(20f,-1.57f);
             }
         }
+    }
+
+    //TODO
+    private void arrayInList() {
+        for(int i=0;i<arrayPath.length;i++)
+            path.add(arrayPath[i]);
     }
 
 

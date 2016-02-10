@@ -24,6 +24,8 @@ public class MainActivity extends Activity {
     LowLevelNavigationMethods lowLevelNavigationMethods;
     TTSManager ttsManager = null;
 
+    public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
+
     //TODO
     public TextView path;
     public TextView X;

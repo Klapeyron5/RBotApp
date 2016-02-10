@@ -9,5 +9,6 @@ package space.klapeyron.rbotapp;
 public class FaceTracking {
     private void initCamera()
     {
+        /*Тут должен быть пиздгос, гы*/
     }
 }

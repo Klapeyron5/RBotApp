@@ -1,4 +1,5 @@
 package space.klapeyron.rbotapp;
+/* created by Вовчик*/
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -52,10 +53,44 @@ public class TTSManager {
             Log.e("error", "TTS Not Initialized");
     }*/
 
+    /* Ниже описаны методы вызова речи робота*/
+
     public void Greeting() {
 
         if (isLoaded)
             mTts.speak("Hi, my name is Martin 564. I'm robot-assistant. Glad to see you!", TextToSpeech.QUEUE_FLUSH, null);
+        else
+            Log.e("error", "TTS Not Initialized");
+    }
+
+    public void turnLeft() {
+
+        if (isLoaded)
+            mTts.speak("I'm turning left.", TextToSpeech.QUEUE_FLUSH, null);
+        else
+            Log.e("error", "TTS Not Initialized");
+    }
+
+    public void turnRight() {
+
+        if (isLoaded)
+            mTts.speak("I'm turning right.", TextToSpeech.QUEUE_FLUSH, null);
+        else
+            Log.e("error", "TTS Not Initialized");
+    }
+
+    public void moveForwad() {
+
+        if (isLoaded)
+            mTts.speak("I'm moving forward!", TextToSpeech.QUEUE_FLUSH, null);
+        else
+            Log.e("error", "TTS Not Initialized");
+    }
+
+    public void startMove() {
+
+        if (isLoaded)
+            mTts.speak("The task is received. I'm starting the movement, be careful.", TextToSpeech.QUEUE_FLUSH, null);
         else
             Log.e("error", "TTS Not Initialized");
     }

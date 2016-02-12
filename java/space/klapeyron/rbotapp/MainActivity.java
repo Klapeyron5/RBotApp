@@ -101,38 +101,68 @@ public class MainActivity extends Activity {
         button4.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.TURN_RIGHT));
 
         Button button7 = (Button) findViewById(R.id.button7);
-        button7.setOnClickListener(new View.OnClickListener() {
+        button7.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                if (robot.isControllerAvailable(BodyController.class)) {
-                    try {
-                        BodyController bodyController = (BodyController) robot.getController(BodyController.class);
-                        if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
-                            TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                            wheelsController.turnAround(20f, 1.57f);
+            public boolean onTouch(View v, MotionEvent event) {
+                try {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                        if( robot.isControllerAvailable( BodyController.class ) )
+                        {
+                            BodyController bodyController = null;
+                            bodyController = (BodyController) robot.getController( BodyController.class );
+                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+                            {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                                wheelsController.turnAround(10f,20f);
+                            }
                         }
-                    } catch (ControllerException e) {
-                        e.printStackTrace();
                     }
-                }
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        if( robot.isControllerAvailable( BodyController.class ) )
+                        {
+                            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+                            {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                                wheelsController.setWheelsSpeeds(0f,0f);
+                            }
+                        }
+                    }
+                } catch (ControllerException e) {}
+                return false;
             }
         });
 
         Button button8 = (Button) findViewById(R.id.button8);
-        button8.setOnClickListener(new View.OnClickListener() {
+        button8.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                if (robot.isControllerAvailable(BodyController.class)) {
-                    try {
-                        BodyController bodyController = (BodyController) robot.getController(BodyController.class);
-                        if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
-                            TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                            wheelsController.turnAround(20f, -1.57f);
+            public boolean onTouch(View v, MotionEvent event) {
+                try {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                        if( robot.isControllerAvailable( BodyController.class ) )
+                        {
+                            BodyController bodyController = null;
+                                bodyController = (BodyController) robot.getController( BodyController.class );
+                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+                            {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                                wheelsController.moveForward(20f,100f);
+                            }
                         }
-                    } catch (ControllerException e) {
-                        e.printStackTrace();
                     }
-                }
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        if( robot.isControllerAvailable( BodyController.class ) )
+                        {
+                            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
+                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+                            {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                                wheelsController.setWheelsSpeeds(0f,0f);
+                            }
+                        }
+                    }
+                } catch (ControllerException e) {}
+                return false;
             }
         });
 

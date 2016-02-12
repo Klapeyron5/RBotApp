@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
                             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                             {
                                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.turnAround(10f,20f);
+                                wheelsController.turnAround(10f,(float)Math.PI);
                             }
                         }
                     }
@@ -172,7 +172,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
-                    lowLevelNavigationTasks.setTask();
+              //      lowLevelNavigationTasks.setTask();
+                    TaskHandler taskHandler = new TaskHandler(link);
+                    taskHandler.setTask();
                 } catch (ControllerException e) {
                     e.printStackTrace();
                 }

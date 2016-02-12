@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
 
+import space.klapeyron.rbotapp.MainActivity;
+
 public class ClientThread extends Thread {
 
     private volatile Communicator communicator;

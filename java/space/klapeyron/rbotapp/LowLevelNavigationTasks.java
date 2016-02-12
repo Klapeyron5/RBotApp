@@ -16,12 +16,12 @@ public class LowLevelNavigationTasks {
     float startPath;
     float startAngle;
     Robot robot;
-    ForwardThread forwardThread;
+//    ForwardThread forwardThread;
 
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1,1,2,1,0};
+    int[] arrayPath = {1,1};
     ArrayList<Integer> path;//0-right; 1-forward;2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
@@ -33,24 +33,29 @@ public class LowLevelNavigationTasks {
     }
 
     public void setTask() throws ControllerException {
-        Navigation navigation = new Navigation();
-        path = navigation.getPath();
+   //     Navigation navigation = new Navigation();
+    //    path = navigation.getPath();
 
         path = new ArrayList<>();
         arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
-
+  /*      try {
+            taskThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
+   /*     Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay));
+        lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay));
+        Log.i(MainActivity.TAG, "----------------------");*/
     }
 
     class TaskThread extends Thread {
         @Override
         public void run() {
-            float startPath = mainActivity.passedWay;
-            Log.i(MainActivity.TAG, "setTask start passedWay "+startPath);
-
-            int straightLineCoeff = 0;
-       //     distanceForward(straightLineCoeff);
+            int straightLineCoeff = 1;
+        //    distanceForward(straightLineCoeff);
             for(int i=1;i<path.size();i++) {
                 try {
                     switch(path.get(i)) {
@@ -60,14 +65,15 @@ public class LowLevelNavigationTasks {
                             break;
                         case 1:
                             if (path.get(i - 1) == 1)
-                                straightLineCoeff++;
+                            straightLineCoeff++;
                             if (i == path.size() - 1) {
                                 distanceForward(straightLineCoeff);
-                                straightLineCoeff = 0;
-                            } else
+                                straightLineCoeff = 1;
+                            }
+                            else
                                 if (path.get(i + 1) != 1) {
                                     distanceForward(straightLineCoeff);
-                                    straightLineCoeff = 0;
+                                    straightLineCoeff = 1;
                                 }
                             break;
                         case 2:
@@ -77,29 +83,33 @@ public class LowLevelNavigationTasks {
                     }
                 } catch (ControllerException e) {} catch (InterruptedException e) {}
             }
-            Log.i(MainActivity.TAG, "setTask finish passedWay " + mainActivity.passedWay);
-            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.passedWay-startPath));
         }
     }
 
     private void distanceForward(int straightLineCoeff) {
-   //     Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
-        StartingForwardThread startingForwardThread = new StartingForwardThread();
-        startingForwardThread.start(); //acceleration on first forwardDistance
-        try {
-            startingForwardThread.join();
-            Log.i(MainActivity.TAG, "startingForwardThread join()");
-        } catch (InterruptedException e) {}
+       // Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
+    //    StartingForwardThread startingForwardThread = new StartingForwardThread();
+    //    startingForwardThread.start(); //acceleration on first forwardDistance
+    //    try {
+    //        startingForwardThread.join();
+    //    } catch (InterruptedException e) {}
 
-        if(straightLineCoeff > 0) {
-            ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
-            forwardThread.start();
-            try {
+        float startPath = mainActivity.passedWay;
+        Log.i(MainActivity.TAG, "----------------------");
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(startPath));
+        ForwardThread forwardThread = new ForwardThread(straightLineCoeff - 1);
+        forwardThread.start();
+        try {
                 forwardThread.join();
-                Log.i(MainActivity.TAG, "forwardThread join()");
-            } catch (InterruptedException e) {
-            }
-        }
+     //           Log.i(MainActivity.TAG, "forwardThread finished");
+        } catch (InterruptedException e) {}
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay));
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay - startPath));
+        Log.i(MainActivity.TAG, "----------------------");
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay));
+        lowLevelNavigationMethods.runOnKey(LowLevelNavigationMethods.STOP_MOVE);
+        Log.i(MainActivity.TAG, "Global passedWay " + Float.toString(mainActivity.passedWay));
+        Log.i(MainActivity.TAG, "----------------------");
     }
 
     class StartingForwardThread extends Thread {
@@ -129,7 +139,7 @@ public class LowLevelNavigationTasks {
                             if(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)
                                 try {
                                     wheelsController.setWheelsSpeeds(i,i);
-                                    sleep(100);
+                                    sleep(600);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -168,19 +178,20 @@ public class LowLevelNavigationTasks {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         while(true) {
+                        if(mainActivity.passedWay - startPath < purposePath)
                             try {
-                                if (mainActivity.passedWay - startPath < purposePath) {
-                                    wheelsController.setWheelsSpeeds(20f, 20f);
-                                    sleep(100);
-                                } else {
-                                    //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
-                                    wheelsController.setWheelsSpeeds(0.0f, 0.0f);
-                                    sleep(200);
-                                    Log.i(MainActivity.TAG, "ForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));
-                                    return;
-                                }
+                                wheelsController.setWheelsSpeeds(20f,20f);
+                   //             Log.i(MainActivity.TAG, "ForwardThread move--->>");
+                                sleep(100);
                             } catch (InterruptedException e) {}
+                        else {
+                     //       lowLevelNavigationMethods.stopWheelsAction(LowLevelNavigationMethods.STOP_MOVE);
+                  //          Log.i(MainActivity.TAG, "ForwardThread prepare to stop!@!@!@!");
+                            wheelsController.setWheelsSpeeds(0.0f,0.0f);
+                            Log.i(MainActivity.TAG, "ForwardThread finished "+Float.toString(mainActivity.passedWay - startPath));
+                            return;
                         }
+                    }
                     }
                 } catch (ControllerException e) {}
             }

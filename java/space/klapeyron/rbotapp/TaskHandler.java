@@ -19,7 +19,7 @@ public class TaskHandler {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1,1,2,1};
+    int[] arrayPath = {1,1,0,1};
     ArrayList<Integer> path;//0-right; 1-forward;2-left;
 
     TaskHandler(MainActivity m) {
@@ -28,11 +28,12 @@ public class TaskHandler {
     }
 
     public void setTask() throws ControllerException {
-    //    Navigation navigation = new Navigation();
-    //    path = navigation.getPath();
-
-        path = new ArrayList<>();
-        arrayInList();//TODO
+        Navigation navigation = new Navigation();
+        path = navigation.getPath();
+        for(int i=0;i<path.size();i++)
+            Log.i(MainActivity.TAG,"path: "+path.get(i));
+    //    path = new ArrayList<>();
+    //    arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
 
@@ -49,9 +50,9 @@ public class TaskHandler {
             for(int i=0;i<path.size();i++) {
                     switch(path.get(i)) {
                         case 0:
+                            turnRight();
                             break;
                         case 1:
-                            //     if (path.get(i - 1) == 1)
                             straightLineCoeff++;
                             if (i == path.size() - 1) {
                                 distanceForward(straightLineCoeff);
@@ -64,8 +65,6 @@ public class TaskHandler {
                             break;
                         case 2:
                             turnLeft();
-                            //  left();
-                            //  sleep(2500);
                             break;
                     }
             }
@@ -75,14 +74,14 @@ public class TaskHandler {
     }
 
     private void distanceForward(int straightLineCoeff) {
-        //     Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
-    /*    StartingForwardThread startingForwardThread = new StartingForwardThread();
+        Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
+        StartingForwardThread startingForwardThread = new StartingForwardThread();
         startingForwardThread.start(); //acceleration on first forwardDistance
         try {
             startingForwardThread.join();
             Log.i(MainActivity.TAG, "startingForwardThread join()");
         } catch (InterruptedException e) {}
-        straightLineCoeff--;*/
+        straightLineCoeff--;
 
         if(straightLineCoeff > 0) {
             ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
@@ -100,6 +99,15 @@ public class TaskHandler {
         try {
             leftThread.join();
             Log.i(MainActivity.TAG, "leftThread join()");
+        } catch (InterruptedException e) {}
+    }
+
+    private void turnRight() {
+        RightThread rightThread = new RightThread();
+        rightThread.start();
+        try {
+            rightThread.join();
+            Log.i(MainActivity.TAG, "rightThread join()");
         } catch (InterruptedException e) {}
     }
 
@@ -191,7 +199,7 @@ public class TaskHandler {
 
         LeftThread() {
             startAngle = mainActivity.angle;
-            purposeAngle = (float) Math.PI / 2; //TODO //average correcting
+            purposeAngle = (float) Math.PI / 2;
         }
 
         @Override
@@ -202,7 +210,7 @@ public class TaskHandler {
             if ((startAngle >= 0) && (startAngle < Math.PI / 2)) {
                 flagVariant = 1;
                 Log.i(MainActivity.TAG, "1");
-            } else if (startAngle > Math.PI / 2) {
+            } else if (startAngle >= Math.PI / 2) {
                 flagVariant = 2;
                 Log.i(MainActivity.TAG, "2");
             } else if (startAngle < -Math.PI / 2) {
@@ -220,7 +228,7 @@ public class TaskHandler {
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                        wheelsController.turnAround(10f,(float)Math.PI/2);
+                        wheelsController.turnAround(10f, (float) Math.PI / 2);
                         while (true) {
                                 if (new FlagVariant(flagVariant).getFlag()) {
                                 } else {
@@ -282,6 +290,105 @@ public class TaskHandler {
             }
         }
     }
+
+    class RightThread extends Thread {
+        private float startAngle;
+        private float purposeAngle;
+
+        RightThread() {
+            startAngle = mainActivity.angle;
+            purposeAngle = (float) -Math.PI / 2;
+        }
+
+        @Override
+        public void run() {
+            Log.i(MainActivity.TAG, "RightThread started ----->>>>>>" + startAngle);
+
+            int flagVariant;
+            if ((startAngle <= 0) && (startAngle > -Math.PI / 2)) {
+                flagVariant = 1;
+                Log.i(MainActivity.TAG, "1");
+            } else if (startAngle <= -Math.PI / 2) {
+                flagVariant = 2;
+                Log.i(MainActivity.TAG, "2");
+            } else if (startAngle > Math.PI / 2) {
+                flagVariant = 3;
+                Log.i(MainActivity.TAG, "3");
+            } else {
+                flagVariant = 4;
+                Log.i(MainActivity.TAG, "4");
+            }
+
+            if (robot.isControllerAvailable(BodyController.class)) {
+                BodyController bodyController = null;
+                try {
+                    bodyController = (BodyController) robot.getController(BodyController.class);
+                    if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                        TwoWheelsBodyController wheelsController = null;
+                        wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                        wheelsController.turnAround(10f,(float)-Math.PI/2);
+                        while (true) {
+                            if (new FlagVariant(flagVariant).getFlag()) {
+                            } else {
+                                wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                                try {
+                                    sleep(200);
+                                } catch (InterruptedException e) {}
+                                Log.i(MainActivity.TAG, "RightThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
+                                return;
+                            }
+                        }
+                    }
+                } catch (ControllerException e) {
+                }
+            }
+        }
+
+        class FlagVariant {
+            private int variant = 0;
+
+            FlagVariant(int v) {
+                variant = v;
+            }
+
+            public boolean getFlag() {
+                float currentAngle = mainActivity.angle;
+                switch (this.variant) {
+                    case 1:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 2:
+                        if (currentAngle > 0)
+                            currentAngle -= 2 * Math.PI;
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 3:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 4:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    default:
+                        return true;
+                }
+            }
+
+            public float getDimension() {
+                float currentAngle = mainActivity.angle;
+                switch (this.variant) {
+                    case 1:
+                        return Math.abs(currentAngle - startAngle);
+                    case 2:
+                        if (currentAngle < 0)
+                            currentAngle -= 2 * Math.PI;
+                        return Math.abs(currentAngle - startAngle);
+                    case 3:
+                        return Math.abs(currentAngle - startAngle);
+                    case 4:
+                        return Math.abs(currentAngle - startAngle);
+                    default:
+                        return 0;
+                }
+            }
+        }
+    }
+
 
     //TODO
     private void arrayInList() {

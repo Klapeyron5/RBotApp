@@ -48,7 +48,6 @@ public class MainActivity extends Activity {
 
         initRobot();
         initConstructor();
-    //    odometryMethod();
     }
 
     private void initRobot() {
@@ -171,8 +170,6 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 try {
                     lowLevelNavigationTasks.setTask();
-              //      TaskHandler taskHandler = new TaskHandler(link);
-               //     taskHandler.setTask();
                 } catch (ControllerException e) {
                     e.printStackTrace();
                 }

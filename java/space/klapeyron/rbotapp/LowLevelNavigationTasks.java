@@ -3,7 +3,6 @@ package space.klapeyron.rbotapp;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Timer;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -17,12 +16,10 @@ public class LowLevelNavigationTasks {
     float startPath;
     float startAngle;
     Robot robot;
-    ForwardThread forwardThread;
 
     private final static float forwardDistance = 0.5f;
 
-
-    int[] arrayPath = {1};
+    int[] arrayPath = {1,1,2,1,1,0,1};
     ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
@@ -34,11 +31,11 @@ public class LowLevelNavigationTasks {
     }
 
     public void setTask() throws ControllerException {
-   //     Navigation navigation = new Navigation();
-   //     path = navigation.getPath();
+        Navigation navigation = new Navigation();
+        path = navigation.getPath();
 
-        path = new ArrayList<>();
-        arrayInList();//TODO
+   //     path = new ArrayList<>();
+   //     arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
 
@@ -52,28 +49,25 @@ public class LowLevelNavigationTasks {
 
             int straightLineCoeff = 0;
             for(int i=0;i<path.size();i++) {
-                try {
-                    switch(path.get(i)) {
-                        case 0:
-                            right();
-                            sleep(2500);
-                            break;
-                        case 1:
-                            straightLineCoeff++;
-                            if (i == path.size() - 1) {
+                switch(path.get(i)) {
+                    case 0:
+                        turnRight();
+                        break;
+                    case 1:
+                        straightLineCoeff++;
+                        if (i == path.size() - 1) {
+                            distanceForward(straightLineCoeff);
+                            straightLineCoeff = 0;
+                        } else
+                            if (path.get(i + 1) != 1) {
                                 distanceForward(straightLineCoeff);
                                 straightLineCoeff = 0;
-                            } else
-                                if (path.get(i + 1) != 1) {
-                                    distanceForward(straightLineCoeff);
-                                    straightLineCoeff = 0;
-                                }
-                            break;
-                        case 2:
-                            turnLeft();
-                            break;
-                    }
-                } catch (ControllerException e) {} catch (InterruptedException e) {}
+                            }
+                        break;
+                    case 2:
+                        turnLeft();
+                        break;
+                }
             }
             Log.i(MainActivity.TAG, "setTask finish passedWay " + mainActivity.passedWay);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.passedWay-startPath));
@@ -113,6 +107,14 @@ public class LowLevelNavigationTasks {
         leftThread.start();
         try {
             leftThread.join();
+        } catch (InterruptedException e) {}
+    }
+
+    private void turnRight() {
+        RightThread rightThread = new RightThread();
+        rightThread.start();
+        try {
+            rightThread.join();
         } catch (InterruptedException e) {}
     }
 
@@ -166,7 +168,6 @@ public class LowLevelNavigationTasks {
             public void run() {
                 while(running) {
                     if(!(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)) {
-                  //      wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
                     }
@@ -308,7 +309,7 @@ public class LowLevelNavigationTasks {
 
         LeftThread() {
             startAngle = mainActivity.angle;
-            purposeAngle = (float) Math.PI / 2 - 0.17f; //TODO //average correcting
+            purposeAngle = (float) Math.PI / 2;
         }
 
         @Override
@@ -316,10 +317,10 @@ public class LowLevelNavigationTasks {
             Log.i(MainActivity.TAG, "LeftThread started ----->>>>>>" + startAngle);
 
             int flagVariant;
-            if ((startAngle > 0) && (startAngle < Math.PI / 2)) {
+            if ((startAngle >= 0) && (startAngle < Math.PI / 2)) {
                 flagVariant = 1;
                 Log.i(MainActivity.TAG, "1");
-            } else if (startAngle > Math.PI / 2) {
+            } else if (startAngle >= Math.PI / 2) {
                 flagVariant = 2;
                 Log.i(MainActivity.TAG, "2");
             } else if (startAngle < -Math.PI / 2) {
@@ -337,24 +338,16 @@ public class LowLevelNavigationTasks {
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                        wheelsController.turnAround(10f, (float) Math.PI / 2);
                         while (true) {
-                            try {
-
-                                if (new FlagVariant(flagVariant).getFlag()) {
-                               //     wheelsController.turnAround(5f,2f);
-                                    wheelsController.setWheelsSpeeds(-5f, 5f);
-                                    sleep(100);
-                                } else {
-                                    //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
-                                    wheelsController.setWheelsSpeeds(0.0f, 0.0f);
-                                    Log.i(MainActivity.TAG, "LeftThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
+                            if (new FlagVariant(flagVariant).getFlag()) {
+                            } else {
+                                wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                                try {
                                     sleep(200);
-                                    Log.i(MainActivity.TAG, "LeftThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
-                                    sleep(500);
-                                    Log.i(MainActivity.TAG, "LeftThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
-                                    return;
-                                }
-                            } catch (InterruptedException e) {
+                                } catch (InterruptedException e) {}
+                                Log.i(MainActivity.TAG, "LeftThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
+                                return;
                             }
                         }
                     }
@@ -408,32 +401,104 @@ public class LowLevelNavigationTasks {
         }
     }
 
-    private void left() throws ControllerException {
-        if( robot.isControllerAvailable( BodyController.class ) )
-        {
-            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
-            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-            {
-                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                Log.i(MainActivity.TAG, "left move before");
-                wheelsController.turnAround(20f, 1.57f);
-                Log.i(MainActivity.TAG, "left move after");
+    class RightThread extends Thread {
+        private float startAngle;
+        private float purposeAngle;
+
+        RightThread() {
+            startAngle = mainActivity.angle;
+            purposeAngle = (float) -Math.PI / 2;
+        }
+
+        @Override
+        public void run() {
+            Log.i(MainActivity.TAG, "RightThread started ----->>>>>>" + startAngle);
+
+            int flagVariant;
+            if ((startAngle <= 0) && (startAngle > -Math.PI / 2)) {
+                flagVariant = 1;
+                Log.i(MainActivity.TAG, "1");
+            } else if (startAngle <= -Math.PI / 2) {
+                flagVariant = 2;
+                Log.i(MainActivity.TAG, "2");
+            } else if (startAngle > Math.PI / 2) {
+                flagVariant = 3;
+                Log.i(MainActivity.TAG, "3");
+            } else {
+                flagVariant = 4;
+                Log.i(MainActivity.TAG, "4");
+            }
+
+            if (robot.isControllerAvailable(BodyController.class)) {
+                BodyController bodyController = null;
+                try {
+                    bodyController = (BodyController) robot.getController(BodyController.class);
+                    if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                        TwoWheelsBodyController wheelsController = null;
+                        wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                        wheelsController.turnAround(10f,(float)-Math.PI/2);
+                        while (true) {
+                            if (new FlagVariant(flagVariant).getFlag()) {
+                            } else {
+                                wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                                try {
+                                    sleep(200);
+                                } catch (InterruptedException e) {}
+                                Log.i(MainActivity.TAG, "RightThread finished ------------>>>>> " + new FlagVariant(flagVariant).getDimension());
+                                return;
+                            }
+                        }
+                    }
+                } catch (ControllerException e) {
+                }
+            }
+        }
+
+        class FlagVariant {
+            private int variant = 0;
+
+            FlagVariant(int v) {
+                variant = v;
+            }
+
+            public boolean getFlag() {
+                float currentAngle = mainActivity.angle;
+                switch (this.variant) {
+                    case 1:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 2:
+                        if (currentAngle > 0)
+                            currentAngle -= 2 * Math.PI;
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 3:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    case 4:
+                        return ((currentAngle - startAngle) > purposeAngle);
+                    default:
+                        return true;
+                }
+            }
+
+            public float getDimension() {
+                float currentAngle = mainActivity.angle;
+                switch (this.variant) {
+                    case 1:
+                        return Math.abs(currentAngle - startAngle);
+                    case 2:
+                        if (currentAngle < 0)
+                            currentAngle -= 2 * Math.PI;
+                        return Math.abs(currentAngle - startAngle);
+                    case 3:
+                        return Math.abs(currentAngle - startAngle);
+                    case 4:
+                        return Math.abs(currentAngle - startAngle);
+                    default:
+                        return 0;
+                }
             }
         }
     }
-
-    private void right() throws ControllerException {
-        if( robot.isControllerAvailable( BodyController.class ) )
-        {
-            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
-            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-            {
-                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.turnAround(20f, -1.57f);
-            }
-        }
-    }
-
+    
     //TODO
     private void arrayInList() {
         for(int i=0;i<arrayPath.length;i++)

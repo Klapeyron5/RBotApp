@@ -22,7 +22,7 @@ public class LowLevelNavigationTasks {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1,1,1};
+    int[] arrayPath = {1};
     ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
@@ -81,19 +81,30 @@ public class LowLevelNavigationTasks {
     }
 
     private void distanceForward(int straightLineCoeff) {
-        StartingForwardThread startingForwardThread = new StartingForwardThread();
-        startingForwardThread.start(); //acceleration on first forwardDistance
-        try {
-            startingForwardThread.join();
-        } catch (InterruptedException e) {}
-        straightLineCoeff--;
-
-        if(straightLineCoeff > 0) {
-            ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
-            forwardThread.start();
+        if (straightLineCoeff == 1) {
+            ForwardThreadForSingleDistance forwardThreadForSingleDistance = new ForwardThreadForSingleDistance();
+            forwardThreadForSingleDistance.start(); //acceleration on first forwardDistance
             try {
-                forwardThread.join();
+                forwardThreadForSingleDistance.join();
             } catch (InterruptedException e) {}
+
+        } else {
+
+            StartingForwardThread startingForwardThread = new StartingForwardThread();
+            startingForwardThread.start(); //acceleration on first forwardDistance
+            try {
+                startingForwardThread.join();
+            } catch (InterruptedException e) {
+            }
+            straightLineCoeff--;
+            if (straightLineCoeff > 0) {
+                ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
+                forwardThread.start();
+                try {
+                    forwardThread.join();
+                } catch (InterruptedException e) {
+                }
+            }
         }
     }
 
@@ -109,6 +120,68 @@ public class LowLevelNavigationTasks {
         private float startPath;
 
         StartingForwardThread() {
+            startPath = mainActivity.passedWay;
+        }
+
+        @Override
+        public void run() {
+            if( robot.isControllerAvailable( BodyController.class ) )
+            {
+                BodyController bodyController = null;
+                try {
+                    bodyController = (BodyController) robot.getController( BodyController.class );
+                    if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
+                    {
+                        TwoWheelsBodyController wheelsController = null;
+                        wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                        float i = 0;
+                        CheckThread checkThread;
+                        while(true) {
+                            if(i<10) //acceleration
+                                i++;
+                            wheelsController.setWheelsSpeeds(i, i);
+                            checkThread = new CheckThread(startPath,wheelsController);
+                            checkThread.setRunning(true);
+                            checkThread.start();
+                            sleep(500);
+                            checkThread.setRunning(false);
+                            if (checkThread.stopFlag)
+                                return;
+                        }
+                    }
+                } catch (ControllerException e) {} catch (InterruptedException e) {}
+            }
+        }
+
+        class CheckThread extends Thread {
+            private float startPath;
+            private TwoWheelsBodyController wheelsController;
+            private boolean running = false;
+            public boolean stopFlag = false;
+            CheckThread(float s,TwoWheelsBodyController w) {
+                startPath = s;
+                wheelsController = w;
+            }
+            @Override
+            public void run() {
+                while(running) {
+                    if(!(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)) {
+                  //      wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                        stopFlag = true;
+                        return;
+                    }
+                }
+            }
+            public void setRunning(boolean r) {
+                running = r;
+            }
+        }
+    }
+
+    class ForwardThreadForSingleDistance extends Thread {
+        private float startPath;
+
+        ForwardThreadForSingleDistance() {
             startPath = mainActivity.passedWay;
         }
 

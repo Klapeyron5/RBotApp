@@ -19,7 +19,7 @@ public class TaskHandler {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1,1,0,1};
+    int[] arrayPath = {1};
     ArrayList<Integer> path;//0-right; 1-forward;2-left;
 
     TaskHandler(MainActivity m) {
@@ -28,12 +28,12 @@ public class TaskHandler {
     }
 
     public void setTask() throws ControllerException {
-        Navigation navigation = new Navigation();
-        path = navigation.getPath();
-        for(int i=0;i<path.size();i++)
-            Log.i(MainActivity.TAG,"path: "+path.get(i));
-    //    path = new ArrayList<>();
-    //    arrayInList();//TODO
+    //    Navigation navigation = new Navigation();
+    //    path = navigation.getPath();
+    //    for(int i=0;i<path.size();i++)
+    //        Log.i(MainActivity.TAG,"path: "+path.get(i));
+        path = new ArrayList<>();
+        arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
 
@@ -74,21 +74,18 @@ public class TaskHandler {
     }
 
     private void distanceForward(int straightLineCoeff) {
-        Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
-        StartingForwardThread startingForwardThread = new StartingForwardThread();
+    /*    StartingForwardThread startingForwardThread = new StartingForwardThread();
         startingForwardThread.start(); //acceleration on first forwardDistance
         try {
             startingForwardThread.join();
-            Log.i(MainActivity.TAG, "startingForwardThread join()");
         } catch (InterruptedException e) {}
-        straightLineCoeff--;
+        straightLineCoeff--;*/
 
         if(straightLineCoeff > 0) {
             ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
             forwardThread.start();
             try {
                 forwardThread.join();
-                Log.i(MainActivity.TAG, "forwardThread join()");
             } catch (InterruptedException e) {}
         }
     }
@@ -135,21 +132,21 @@ public class TaskHandler {
                         while(true) {
                             if(i<20) //acceleration
                                 i++;
-                            if(mainActivity.passedWay - startPath < TaskHandler.forwardDistance)
-                                try {
-                                    wheelsController.setWheelsSpeeds(i,i);
-                                    sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                            if(mainActivity.passedWay - startPath < TaskHandler.forwardDistance) {
+                                wheelsController.setWheelsSpeeds(i, i);
+                                sleep(100);
+                            }
                             else {
-                                //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
-                                Log.i(MainActivity.TAG, "StartingForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));
+                                wheelsController.setWheelsSpeeds(0.0f,0.0f);
+                                sleep(400);
+                                Log.i(MainActivity.TAG, "StartingForwardThread finished, difference: " + Float.toString(mainActivity.passedWay - startPath));
                                 return;
                             }
                         }
                     }
-                } catch (ControllerException e) {}
+                } catch (ControllerException e) {} catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -165,7 +162,6 @@ public class TaskHandler {
 
         @Override
         public void run() {
-            Log.i(MainActivity.TAG, "ForwardThread started");
             if( robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
@@ -177,13 +173,13 @@ public class TaskHandler {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         wheelsController.moveForward(20f,100f);
                         while(true) {
-                                if (mainActivity.passedWay - startPath < purposePath) {
-                                } else {
+                                if (!(mainActivity.passedWay - startPath < purposePath)) {
+                                    Log.i(MainActivity.TAG, "ForwardThread finished before stop " + Float.toString(mainActivity.passedWay - startPath));
                                     wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                                     try {
                                         sleep(200);
                                     } catch (InterruptedException e) {}
-                                    Log.i(MainActivity.TAG, "ForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));
+                                    Log.i(MainActivity.TAG, "ForwardThread finished after stop" + Float.toString(mainActivity.passedWay - startPath));
                                     return;
                                 }
                         }

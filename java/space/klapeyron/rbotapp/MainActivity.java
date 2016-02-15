@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
 
         initRobot();
         initConstructor();
-        odometryMethod();
+    //    odometryMethod();
     }
 
     private void initRobot() {
@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
         RobotStateListener robotStateListener = new RobotStateListener() {
             @Override
             public void onRobotReady() {
+                odometryMethod();
                 Log.i(TAG, "onRobotReady");
             }
 
@@ -113,7 +114,7 @@ public class MainActivity extends Activity {
                             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                             {
                                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.turnAround(10f,(float)Math.PI);
+                                wheelsController.turnAround(10f, (float) Math.PI);
                             }
                         }
                     }
@@ -139,29 +140,26 @@ public class MainActivity extends Activity {
             public boolean onTouch(View v, MotionEvent event) {
                 try {
                     if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        if( robot.isControllerAvailable( BodyController.class ) )
-                        {
+                        if (robot.isControllerAvailable(BodyController.class)) {
                             BodyController bodyController = null;
-                                bodyController = (BodyController) robot.getController( BodyController.class );
-                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                            {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.moveForward(20f,100f);
+                            bodyController = (BodyController) robot.getController(BodyController.class);
+                            if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                                wheelsController.moveForward(20f, 100f);
                             }
                         }
                     }
                     if (event.getAction() == MotionEvent.ACTION_UP) {
-                        if( robot.isControllerAvailable( BodyController.class ) )
-                        {
-                            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
-                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                            {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.setWheelsSpeeds(0f,0f);
+                        if (robot.isControllerAvailable(BodyController.class)) {
+                            BodyController bodyController = (BodyController) robot.getController(BodyController.class);
+                            if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                                wheelsController.setWheelsSpeeds(0f, 0f);
                             }
                         }
                     }
-                } catch (ControllerException e) {}
+                } catch (ControllerException e) {
+                }
                 return false;
             }
         });
@@ -172,20 +170,12 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
-              //      lowLevelNavigationTasks.setTask();
-                    TaskHandler taskHandler = new TaskHandler(link);
-                    taskHandler.setTask();
+                    lowLevelNavigationTasks.setTask();
+              //      TaskHandler taskHandler = new TaskHandler(link);
+               //     taskHandler.setTask();
                 } catch (ControllerException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-
-        Button button9 = (Button) findViewById(R.id.button9);
-        button9.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                odometryMethod();
             }
         });
 
@@ -204,8 +194,8 @@ public class MainActivity extends Activity {
             @Override
             public void onWheelStateRecieved(TwoWheelState twoWheelState) {
                 passedWay = twoWheelState.getOdometryInfo().getPath();
-                currentX = twoWheelState.getOdometryInfo().getX();
-                currentY = twoWheelState.getOdometryInfo().getY();
+                currentX = (float) (-twoWheelState.getOdometryInfo().getX()+0.5*3+0.25);
+                currentY = (float) (-twoWheelState.getOdometryInfo().getY()+0.5+0.25);
                 wheelSpeedLeft = twoWheelState.getSpeed().getLWheelSpeed();
                 wheelSpeedRight = twoWheelState.getSpeed().getRWheelSpeed();
                 angle = twoWheelState.getOdometryInfo().getAngle();

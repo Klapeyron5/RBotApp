@@ -3,6 +3,7 @@ package space.klapeyron.rbotapp;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Timer;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -21,8 +22,8 @@ public class LowLevelNavigationTasks {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {2};
-    ArrayList<Integer> path;//0-right; 1-forward;2-left;
+    int[] arrayPath = {1};
+    ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
         mainActivity = m;
@@ -33,11 +34,11 @@ public class LowLevelNavigationTasks {
     }
 
     public void setTask() throws ControllerException {
-        Navigation navigation = new Navigation();
-        path = navigation.getPath();
+   //     Navigation navigation = new Navigation();
+   //     path = navigation.getPath();
 
-   //     path = new ArrayList<>();
-    //    arrayInList();//TODO
+        path = new ArrayList<>();
+        arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
 
@@ -50,7 +51,6 @@ public class LowLevelNavigationTasks {
             Log.i(MainActivity.TAG, "setTask start passedWay "+startPath);
 
             int straightLineCoeff = 0;
-       //     distanceForward(straightLineCoeff);
             for(int i=0;i<path.size();i++) {
                 try {
                     switch(path.get(i)) {
@@ -59,7 +59,6 @@ public class LowLevelNavigationTasks {
                             sleep(2500);
                             break;
                         case 1:
-                       //     if (path.get(i - 1) == 1)
                             straightLineCoeff++;
                             if (i == path.size() - 1) {
                                 distanceForward(straightLineCoeff);
@@ -72,8 +71,6 @@ public class LowLevelNavigationTasks {
                             break;
                         case 2:
                             turnLeft();
-                          //  left();
-                          //  sleep(2500);
                             break;
                     }
                 } catch (ControllerException e) {} catch (InterruptedException e) {}
@@ -84,12 +81,10 @@ public class LowLevelNavigationTasks {
     }
 
     private void distanceForward(int straightLineCoeff) {
-   //     Log.i(MainActivity.TAG, "forwardThread started "+straightLineCoeff);
         StartingForwardThread startingForwardThread = new StartingForwardThread();
         startingForwardThread.start(); //acceleration on first forwardDistance
         try {
             startingForwardThread.join();
-            Log.i(MainActivity.TAG, "startingForwardThread join()");
         } catch (InterruptedException e) {}
         straightLineCoeff--;
 
@@ -98,7 +93,6 @@ public class LowLevelNavigationTasks {
             forwardThread.start();
             try {
                 forwardThread.join();
-                Log.i(MainActivity.TAG, "forwardThread join()");
             } catch (InterruptedException e) {}
         }
     }
@@ -108,7 +102,6 @@ public class LowLevelNavigationTasks {
         leftThread.start();
         try {
             leftThread.join();
-            Log.i(MainActivity.TAG, "leftThread join()");
         } catch (InterruptedException e) {}
     }
 
@@ -122,7 +115,6 @@ public class LowLevelNavigationTasks {
 
         @Override
         public void run() {
-            Log.i(MainActivity.TAG, "StartingForwardThread started ");
             if( robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
@@ -136,21 +128,45 @@ public class LowLevelNavigationTasks {
                         while(true) {
                             if(i<20) //acceleration
                                 i++;
-                            if(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)
-                                try {
-                                    wheelsController.setWheelsSpeeds(i,i);
-                                    sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            else {
-                                //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
-                                Log.i(MainActivity.TAG, "StartingForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));
+                            wheelsController.setWheelsSpeeds(i, i);
+                            CheckThread checkThread = new CheckThread(startPath,wheelsController);
+                            checkThread.setRunning(true);
+                            checkThread.start();
+                            sleep(500);
+                            checkThread.setRunning(false);
+                            if (checkThread.stopFlag)
                                 return;
-                            }
                         }
                     }
-                } catch (ControllerException e) {}
+                } catch (ControllerException e) {} catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        class CheckThread extends Thread {
+            private float startPath;
+            private TwoWheelsBodyController wheelsController;
+            private boolean running = false;
+            public boolean stopFlag = false;
+
+            CheckThread(float s,TwoWheelsBodyController w) {
+                startPath = s;
+                wheelsController = w;
+            }
+            @Override
+            public void run() {
+                while(running) {
+                    if(!(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)) {
+                        wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                        stopFlag = true;
+                        return;
+                    }
+                }
+            }
+
+            public void setRunning(boolean r) {
+                running = r;
             }
         }
     }
@@ -182,7 +198,6 @@ public class LowLevelNavigationTasks {
                                     wheelsController.setWheelsSpeeds(20f, 20f);
                                     sleep(100);
                                 } else {
-                                    //        lowLevelNavigationMethods.stopWheelsAction(lowLevelNavigationKey);
                                     wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                                     sleep(200);
                                     Log.i(MainActivity.TAG, "ForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));

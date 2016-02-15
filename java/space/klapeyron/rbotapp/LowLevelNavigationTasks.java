@@ -22,7 +22,7 @@ public class LowLevelNavigationTasks {
     private final static float forwardDistance = 0.5f;
 
 
-    int[] arrayPath = {1};
+    int[] arrayPath = {1,1,1};
     ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
     LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
@@ -107,7 +107,6 @@ public class LowLevelNavigationTasks {
 
     class StartingForwardThread extends Thread {
         private float startPath;
-        private float[] accelerationSpeeds = {};
 
         StartingForwardThread() {
             startPath = mainActivity.passedWay;
@@ -125,11 +124,12 @@ public class LowLevelNavigationTasks {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         float i = 0;
+                        CheckThread checkThread;
                         while(true) {
-                            if(i<20) //acceleration
+                            if(i<10) //acceleration
                                 i++;
                             wheelsController.setWheelsSpeeds(i, i);
-                            CheckThread checkThread = new CheckThread(startPath,wheelsController);
+                            checkThread = new CheckThread(startPath,wheelsController);
                             checkThread.setRunning(true);
                             checkThread.start();
                             sleep(500);
@@ -138,9 +138,7 @@ public class LowLevelNavigationTasks {
                                 return;
                         }
                     }
-                } catch (ControllerException e) {} catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                } catch (ControllerException e) {} catch (InterruptedException e) {}
             }
         }
 
@@ -149,7 +147,6 @@ public class LowLevelNavigationTasks {
             private TwoWheelsBodyController wheelsController;
             private boolean running = false;
             public boolean stopFlag = false;
-
             CheckThread(float s,TwoWheelsBodyController w) {
                 startPath = s;
                 wheelsController = w;
@@ -164,7 +161,6 @@ public class LowLevelNavigationTasks {
                     }
                 }
             }
-
             public void setRunning(boolean r) {
                 running = r;
             }
@@ -192,21 +188,43 @@ public class LowLevelNavigationTasks {
                     {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
+                        CheckThread checkThread;
                         while(true) {
-                            try {
-                                if (mainActivity.passedWay - startPath < purposePath) {
-                                    wheelsController.setWheelsSpeeds(20f, 20f);
-                                    sleep(100);
-                                } else {
-                                    wheelsController.setWheelsSpeeds(0.0f, 0.0f);
-                                    sleep(200);
-                                    Log.i(MainActivity.TAG, "ForwardThread finished " + Float.toString(mainActivity.passedWay - startPath));
-                                    return;
-                                }
-                            } catch (InterruptedException e) {}
+                            wheelsController.setWheelsSpeeds(10f, 10f);
+                            checkThread = new CheckThread(startPath,wheelsController);
+                            checkThread.setRunning(true);
+                            checkThread.start();
+                            sleep(500);
+                            checkThread.setRunning(false);
+                            if (checkThread.stopFlag)
+                                return;
                         }
                     }
-                } catch (ControllerException e) {}
+                } catch (ControllerException e) {} catch (InterruptedException e) {}
+            }
+        }
+
+        class CheckThread extends Thread {
+            private float startPath;
+            private TwoWheelsBodyController wheelsController;
+            private boolean running = false;
+            public boolean stopFlag = false;
+            CheckThread(float s,TwoWheelsBodyController w) {
+                startPath = s;
+                wheelsController = w;
+            }
+            @Override
+            public void run() {
+                while(running) {
+                    if(!(mainActivity.passedWay - startPath < purposePath)) {
+                        wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                        stopFlag = true;
+                        return;
+                    }
+                }
+            }
+            public void setRunning(boolean r) {
+                running = r;
             }
         }
     }

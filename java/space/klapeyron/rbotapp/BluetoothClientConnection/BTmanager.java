@@ -24,9 +24,18 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-/**
- * Created by User on 15.02.2016.
- */
-public class BTmanager {
 
+import space.klapeyron.rbotapp.LowLevelNavigationTasks;
+import space.klapeyron.rbotapp.MainActivity;
+
+public class BTmanager {
+    MainActivity mainActivity;
+
+    BTmanager(MainActivity m) {
+        mainActivity = m;
+    }
+
+    public void setTaskForRobot(int Y, int X) {
+        mainActivity.setTaskFromBT(Y,X);
+    }
 }

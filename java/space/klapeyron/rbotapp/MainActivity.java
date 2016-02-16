@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     MainActivity link = this;
     Robot robot;
     LowLevelNavigationMethods lowLevelNavigationMethods;
+    LowLevelNavigationTasks lowLevelNavigationTasks;
     TTSManager ttsManager = null;
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
@@ -165,14 +166,12 @@ public class MainActivity extends Activity {
 
         Button button6 = (Button) findViewById(R.id.button6);
         button6.setOnClickListener(new View.OnClickListener() {
-            LowLevelNavigationTasks lowLevelNavigationTasks = new LowLevelNavigationTasks(link,lowLevelNavigationMethods);
             @Override
             public void onClick(View v) {
+                lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
                 try {
                     lowLevelNavigationTasks.setTask();
-                } catch (ControllerException e) {
-                    e.printStackTrace();
-                }
+                } catch (ControllerException e) {}
             }
         });
 
@@ -218,6 +217,13 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void setTaskFromBT(int Y,int X) {
+        lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+        try {
+            lowLevelNavigationTasks.setTaskFromBT(Y,X);
+        } catch (ControllerException e) {}
     }
 
     class navigationButtonTouch implements View.OnTouchListener {

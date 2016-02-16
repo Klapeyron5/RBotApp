@@ -39,7 +39,7 @@ public class Navigation {
     int n = landscape[0].length; // высота карты
 
     int[] start = {1,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
-    int[] finish = {16,9}; // Конечная точка
+    private int[] finish = {16,9}; // Конечная точка
     int[] tick = start; // Текущая точка (изначально равна начальной)
     int[][] neighbour = new int[4][3]; // Матрица координат (первые две строки) и значений эвристической функции (третья строка) четырех точек-соседей (столбец соответсвует номеру)
     int F; // Эвристическая функция
@@ -48,6 +48,7 @@ public class Navigation {
 
     int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n)
 
+    MainActivity mainActivity;
     ArrayList<Integer> path = new ArrayList<Integer>();
 
     public ArrayList<Integer> getPath()
@@ -86,12 +87,15 @@ public class Navigation {
             System.out.println(Direction[i]);
 
 
-        path.add(1);
+        //TODO //correct start angle
+
+
+        path.add(1);   //TODO //first move only forward now
         for(int i=1;i<Direction.length;i++) {
             if(Direction[i] == Direction[i-1])
                 path.add(1);
             else {
-                if (((Direction[i - 1] == 0) && (Direction[i] == 1)) ||
+                if     (((Direction[i - 1] == 0) && (Direction[i] == 1)) ||
                         ((Direction[i - 1] == 1) && (Direction[i] == 2)) ||
                         ((Direction[i - 1] == 2) && (Direction[i] == 3)) ||
                         ((Direction[i - 1] == 3) && (Direction[i] == 0))) {
@@ -99,7 +103,7 @@ public class Navigation {
                     path.add(1);
                 }
                 else
-                if(((Direction[i-1]==0)&&(Direction[i]==3))||
+                if     (((Direction[i-1]==0)&&(Direction[i]==3))||
                         ((Direction[i-1]==3)&&(Direction[i]==2))||
                         ((Direction[i-1]==2)&&(Direction[i]==1))||
                         ((Direction[i-1]==1)&&(Direction[i]==0))) {
@@ -110,6 +114,7 @@ public class Navigation {
         }
         return path;
     }
+
     public void buildPath()
     {
         k = 0;
@@ -138,6 +143,7 @@ public class Navigation {
             }
         }
     }
+
     public void getPoint() //Нахождение оптимальной точки продолжения пути из текущей
     {
         for (i=0;i<4;i++)
@@ -177,6 +183,7 @@ public class Navigation {
         System.out.println("j="+j);
         System.out.println(neighbour[j][2]+"("+neighbour[j][0]+";"+neighbour[j][1]+")");*/
     }
+
     public int getFunction() //Нахождение эвристической функции оптимального продолжения маршрута
     {
         getNeighbours();
@@ -190,6 +197,7 @@ public class Navigation {
         System.out.println(F);
         }*/
     }
+
     public void getNeighbours() //Нахождение соседей текущей точки
     {
         neighbour[0][0] = tick[0]+1; neighbour[0][1] = tick[1];
@@ -200,5 +208,9 @@ public class Navigation {
         /*System.out.println("Neighbours:");
         for (i=0;i<4;i++)
         System.out.println(i+"("+neighbour[i][0]+";"+neighbour[i][1]+")");*/
+    }
+
+    public void setFinish(int Y,int X) {
+        finish = new int[] {Y,X};
     }
 }

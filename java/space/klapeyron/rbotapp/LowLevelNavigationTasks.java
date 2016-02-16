@@ -12,19 +12,19 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 
 public class LowLevelNavigationTasks {
     MainActivity mainActivity;
-    LowLevelNavigationMethods lowLevelNavigationMethods;
     float startPath;
     float startAngle;
     Robot robot;
+    private int startDirection = 0;
+    private int direction = startDirection;
 
     private final static float forwardDistance = 0.5f;
 
     int[] arrayPath = {1,1,2,1,1,0,1};
     ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
-    LowLevelNavigationTasks(MainActivity m, LowLevelNavigationMethods l) {
+    LowLevelNavigationTasks(MainActivity m) {
         mainActivity = m;
-        lowLevelNavigationMethods = l;
         startPath = mainActivity.passedWay;
         startAngle = mainActivity.angle;
         robot = mainActivity.robot;
@@ -39,6 +39,15 @@ public class LowLevelNavigationTasks {
         TaskThread taskThread = new TaskThread();
         taskThread.start();
 
+    }
+
+    //TODO
+    public void setTaskFromBT(int Y,int X) throws ControllerException {
+        Navigation navigation = new Navigation();
+        navigation.setFinish(Y,X);
+        path = navigation.getPath();
+        TaskThread taskThread = new TaskThread();
+        taskThread.start();
     }
 
     class TaskThread extends Thread {
@@ -88,16 +97,14 @@ public class LowLevelNavigationTasks {
             startingForwardThread.start(); //acceleration on first forwardDistance
             try {
                 startingForwardThread.join();
-            } catch (InterruptedException e) {
-            }
+            } catch (InterruptedException e) {}
             straightLineCoeff--;
             if (straightLineCoeff > 0) {
                 ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
                 forwardThread.start();
                 try {
                     forwardThread.join();
-                } catch (InterruptedException e) {
-                }
+                } catch (InterruptedException e) {}
             }
         }
     }
@@ -498,7 +505,7 @@ public class LowLevelNavigationTasks {
             }
         }
     }
-    
+
     //TODO
     private void arrayInList() {
         for(int i=0;i<arrayPath.length;i++)

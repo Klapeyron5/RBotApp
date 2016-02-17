@@ -51,7 +51,7 @@ public class MainActivity extends Activity {
     private ProgressDialog progressDialog;*/
 
     private ServerThread serverThread;
-    //private ClientThread clientThread;
+    private ClientThread clientThread;
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
 
@@ -315,9 +315,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    //Bluetooth needed:
+    //Bluetooth needed things:
 
-   /* private class WriteTask extends AsyncTask<String, Void, Void> {
+   private class WriteTask extends AsyncTask<String, Void, Void> {
         protected Void doInBackground(String... args) {
             try {
                 clientThread.getCommunicator().write(args[0]);
@@ -326,7 +326,7 @@ public class MainActivity extends Activity {
             }
             return null;
         }
-    }*/
+    }
 
    private final CommunicatorService communicatorService = new CommunicatorService() {
         @Override
@@ -369,13 +369,12 @@ public class MainActivity extends Activity {
             clientThread.cancel();
         }
         if (serverThread != null) serverThread.cancel();
-    }
+    }*/
 
     @Override
     public void onResume() {
         super.onResume();
         serverThread = new ServerThread(communicatorService);
         serverThread.start();
-        listAdapter.notifyDataSetChanged();
-    }*/
+    }
 }

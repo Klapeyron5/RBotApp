@@ -42,13 +42,13 @@ public class LowLevelNavigationTasks {
     }
 
     //TODO
-    public void setTaskFromBT(int Y,int X) throws ControllerException {
+    /*public void setTaskFromBT(int Y,int X) throws ControllerException {
         Navigation navigation = new Navigation();
         navigation.setFinish(Y,X);
         path = navigation.getPath();
         TaskThread taskThread = new TaskThread();
         taskThread.start();
-    }
+    }*/
 
     class TaskThread extends Thread {
         @Override

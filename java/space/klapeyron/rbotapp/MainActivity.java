@@ -43,18 +43,12 @@ public class MainActivity extends Activity {
     LowLevelNavigationTasks lowLevelNavigationTasks;
     TTSManager ttsManager = null;
 
-    /*private BluetoothAdapter bluetoothAdapter;
-    private BroadcastReceiver discoverDevicesReceiver;
-    private BroadcastReceiver discoveryFinishedReceiver;
-    private ArrayAdapter<BluetoothDevice> listAdapter;
-
-    private ProgressDialog progressDialog;*/
-
     private ServerThread serverThread;
     private ClientThread clientThread;
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
-
+    public static String hashString = "go";
+    public String inputMessage;
     //TODO
     public TextView path;
     public TextView X;
@@ -78,6 +72,7 @@ public class MainActivity extends Activity {
 
         initRobot();
         initConstructor();
+        bluetoothListener();
     }
 
     private void initRobot() {
@@ -249,12 +244,12 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void setTaskFromBT(int Y,int X) {
+    /*public void setTaskFromBT(int Y,int X) {
         lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
         try {
             lowLevelNavigationTasks.setTaskFromBT(Y,X);
         } catch (ControllerException e) {}
-    }
+    }*/
 
     class navigationButtonTouch implements View.OnTouchListener {
         private ThreadForSimpleNavigationButtons thread;
@@ -337,6 +332,7 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            inputMessage = textData.getText().toString();
                             textData.setText(textData.getText().toString() + "\n" + message); // просмотр строк сообщений
                         }
                     });
@@ -376,5 +372,17 @@ public class MainActivity extends Activity {
         super.onResume();
         serverThread = new ServerThread(communicatorService);
         serverThread.start();
+    }
+
+    public void bluetoothListener()
+    {
+        if (hashString == inputMessage) {
+            lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+            try {
+                lowLevelNavigationTasks.setTask();
+            } catch (ControllerException e) {
+            }
+
+        }
     }
 }

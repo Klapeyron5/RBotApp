@@ -9,7 +9,7 @@ import android.util.Log;
 
 public class CommunicatorImpl extends Thread implements Communicator {
 
-    interface CommunicationListener {
+    public interface CommunicationListener {
         void onMessage(String message);
     }
 

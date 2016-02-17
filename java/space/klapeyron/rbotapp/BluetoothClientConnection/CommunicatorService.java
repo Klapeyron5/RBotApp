@@ -2,6 +2,6 @@ package space.klapeyron.rbotapp.BluetoothClientConnection;
 
 import android.bluetooth.BluetoothSocket;
 
-interface CommunicatorService {
+public interface CommunicatorService {
     Communicator createCommunicatorThread(BluetoothSocket socket);
 }

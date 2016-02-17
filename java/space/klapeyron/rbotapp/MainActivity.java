@@ -1,12 +1,25 @@
 package space.klapeyron.rbotapp;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -15,6 +28,11 @@ import ru.rbot.android.bridge.service.robotcontroll.controllers.body.listeners.T
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 import ru.rbot.android.bridge.service.robotcontroll.robots.listeners.RobotStateListener;
+import space.klapeyron.rbotapp.BluetoothClientConnection.ClientThread;
+import space.klapeyron.rbotapp.BluetoothClientConnection.Communicator;
+import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorImpl;
+import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorService;
+import space.klapeyron.rbotapp.BluetoothClientConnection.ServerThread;
 
 public class MainActivity extends Activity {
     static final String TAG = "TAG";
@@ -23,6 +41,16 @@ public class MainActivity extends Activity {
     Robot robot;
     LowLevelNavigationMethods lowLevelNavigationMethods;
     TTSManager ttsManager = null;
+
+    /*private BluetoothAdapter bluetoothAdapter;
+    private BroadcastReceiver discoverDevicesReceiver;
+    private BroadcastReceiver discoveryFinishedReceiver;
+    private ArrayAdapter<BluetoothDevice> listAdapter;
+
+    private ProgressDialog progressDialog;*/
+
+    private ServerThread serverThread;
+    //private ClientThread clientThread;
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
 
@@ -33,6 +61,7 @@ public class MainActivity extends Activity {
     public TextView SpeedL;
     public TextView SpeedR;
     public TextView Angle;
+    public TextView textData;
 
     float passedWay;
     float currentX;
@@ -87,6 +116,7 @@ public class MainActivity extends Activity {
         SpeedL = (TextView) findViewById(R.id.textView10);
         SpeedR = (TextView) findViewById(R.id.textView11);
         Angle  = (TextView) findViewById(R.id.textView12);
+        textData = (TextView) findViewById(R.id.textView16);
 
         Button button1 = (Button) findViewById(R.id.button1);
         button1.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.FORWARD_MOVE));
@@ -291,4 +321,68 @@ public class MainActivity extends Activity {
        //     Log.i(TAG,"running = "+running);
         }
     }
+
+    //Bluetooth needed:
+
+   /* private class WriteTask extends AsyncTask<String, Void, Void> {
+        protected Void doInBackground(String... args) {
+            try {
+                clientThread.getCommunicator().write(args[0]);
+            } catch (Exception e) {
+                Log.d("MainActivity", e.getClass().getSimpleName() + " " + e.getLocalizedMessage());
+            }
+            return null;
+        }
+    }*/
+
+   private final CommunicatorService communicatorService = new CommunicatorService() {
+        @Override
+        public Communicator createCommunicatorThread(BluetoothSocket socket) {
+            return new CommunicatorImpl(socket, new CommunicatorImpl.CommunicationListener() {
+                @Override
+                public void onMessage(final String message) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textData.setText(textData.getText().toString() + "\n" + message); // просмотр строк сообщений
+                        }
+                    });
+                }
+            });
+        }
+    };
+
+    public void makeDiscoverable(View view) {
+        Intent i = new Intent(
+                BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        i.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+        startActivity(i);
+    }
+
+    /*@Override
+    public void onPause() {
+        super.onPause();
+        bluetoothAdapter.cancelDiscovery();
+
+        if (discoverDevicesReceiver != null) {
+            try {
+                unregisterReceiver(discoverDevicesReceiver);
+            } catch (Exception e) {
+                Log.d("MainActivity", "Не удалось отключить ресивер " + discoverDevicesReceiver);
+            }
+        }
+
+        if (clientThread != null) {
+            clientThread.cancel();
+        }
+        if (serverThread != null) serverThread.cancel();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        serverThread = new ServerThread(communicatorService);
+        serverThread.start();
+        listAdapter.notifyDataSetChanged();
+    }*/
 }

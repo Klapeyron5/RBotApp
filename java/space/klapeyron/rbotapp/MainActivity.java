@@ -48,7 +48,6 @@ public class MainActivity extends Activity {
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
     public static String hashString = "go";
-    public String inputMessage;
     //TODO
     public TextView path;
     public TextView X;
@@ -57,6 +56,7 @@ public class MainActivity extends Activity {
     public TextView SpeedR;
     public TextView Angle;
     public TextView textData;
+    public TextView Status;
 
     float passedWay;
     float currentX;
@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
     float wheelSpeedLeft;
     float wheelSpeedRight;
     float angle;
+    String status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +73,6 @@ public class MainActivity extends Activity {
 
         initRobot();
         initConstructor();
-        bluetoothListener();
     }
 
     private void initRobot() {
@@ -113,6 +113,7 @@ public class MainActivity extends Activity {
         SpeedR = (TextView) findViewById(R.id.textView11);
         Angle  = (TextView) findViewById(R.id.textView12);
         textData = (TextView) findViewById(R.id.textView16);
+        Status = (TextView) findViewById(R.id.textView14);
 
         Button button1 = (Button) findViewById(R.id.button1);
         button1.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.FORWARD_MOVE));
@@ -332,8 +333,21 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            inputMessage = textData.getText().toString();
                             textData.setText(textData.getText().toString() + "\n" + message); // просмотр строк сообщений
+                            //Прослушка с порта bt
+                            if (hashString == textData.getText().toString()) {
+                                lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+                                status = "Ok";
+                                Status.setText(status);
+                                try {
+                                    lowLevelNavigationTasks.setTask();
+                                } catch (ControllerException e) {
+                                }
+
+                            }
+                            else {
+                                status = "Match not found";
+                                Status.setText(status);}
                         }
                     });
                 }
@@ -372,17 +386,5 @@ public class MainActivity extends Activity {
         super.onResume();
         serverThread = new ServerThread(communicatorService);
         serverThread.start();
-    }
-
-    public void bluetoothListener()
-    {
-        if (hashString == inputMessage) {
-            lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
-            try {
-                lowLevelNavigationTasks.setTask();
-            } catch (ControllerException e) {
-            }
-
-        }
     }
 }

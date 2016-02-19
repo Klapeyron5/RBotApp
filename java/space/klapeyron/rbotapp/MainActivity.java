@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
@@ -48,6 +50,7 @@ public class MainActivity extends Activity {
     public TextView Angle;
     public TextView textData;
     public TextView Status;
+    public TextView logs;
 
     float passedWay;
     float currentX;
@@ -105,6 +108,7 @@ public class MainActivity extends Activity {
         Angle  = (TextView) findViewById(R.id.textView12);
         textData = (TextView) findViewById(R.id.textView16);
         Status = (TextView) findViewById(R.id.textView14);
+        logs = (TextView) findViewById(R.id.textView);
 
         Button button1 = (Button) findViewById(R.id.button1);
         button1.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.FORWARD_MOVE));

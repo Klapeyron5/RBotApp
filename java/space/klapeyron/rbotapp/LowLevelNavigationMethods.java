@@ -100,7 +100,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.setWheelsSpeeds(20f,20f);
+                wheelsController.setWheelsSpeeds(0f,20f);
             }
         }
     }
@@ -126,7 +126,7 @@ public class LowLevelNavigationMethods {
             if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
             {
                 TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                wheelsController.setWheelsSpeeds(-20f,-20f);
+                wheelsController.setWheelsSpeeds(20f,0f);
             }
         }
     }

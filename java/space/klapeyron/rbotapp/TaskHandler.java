@@ -13,7 +13,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 public class TaskHandler {
     private MainActivity mainActivity;
     private Robot robot;
-    public int currentDirection = 0; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
+    public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
 
@@ -78,7 +78,7 @@ public class TaskHandler {
     }
 
     private void distanceForward(int straightLineCoeff) {
-        if (straightLineCoeff == 1) {
+    /*    if (straightLineCoeff == 1) {
             ForwardThreadForSingleDistance forwardThreadForSingleDistance = new ForwardThreadForSingleDistance();
             forwardThreadForSingleDistance.start(); //acceleration on first forwardDistance
             try {
@@ -92,7 +92,7 @@ public class TaskHandler {
             try {
                 startingForwardThread.join();
             } catch (InterruptedException e) {}
-            straightLineCoeff--;
+            straightLineCoeff--;*/
             if (straightLineCoeff > 0) {
                 ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
                 forwardThread.start();
@@ -100,7 +100,7 @@ public class TaskHandler {
                     forwardThread.join();
                 } catch (InterruptedException e) {}
             }
-        }
+    //    }
     }
 
     private void turnLeft() {
@@ -247,6 +247,10 @@ public class TaskHandler {
     class ForwardThread extends Thread {
         private float startPath;
         private float purposePath;
+        private float standartSpeed = 7.0f;
+        private float correctionSpeed = 5.0f;
+        private float correctionDistance = 0.01f;
+        private float constX = (float)-Math.PI; //TODO
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.passedWay;
@@ -255,6 +259,7 @@ public class TaskHandler {
 
         @Override
         public void run() {
+            constX = mainActivity.angle;
             Log.i(MainActivity.TAG, "ForwardThread started");
             if( robot.isControllerAvailable( BodyController.class ) )
             {
@@ -266,8 +271,22 @@ public class TaskHandler {
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
+                        float dtAngle = mainActivity.angle;
                         while(true) {
-                            wheelsController.setWheelsSpeeds(20f, 20f);
+                            //TODO //correction direction
+                            if (Math.abs(mainActivity.angle - constX) < correctionDistance) {
+                                wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed);
+                                Log.i(mainActivity.TAG,"OK");
+                            }
+                            else
+                                if (-mainActivity.angle + constX > correctionDistance) {
+                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed);
+                                    Log.i(mainActivity.TAG, "LEFT");
+                                } else {
+                                    wheelsController.setWheelsSpeeds(standartSpeed + correctionSpeed, standartSpeed);
+                                    Log.i(mainActivity.TAG, "RIGHT");
+                                }
+
                             checkThread = new CheckThread(startPath,wheelsController);
                             checkThread.setRunning(true);
                             checkThread.start();

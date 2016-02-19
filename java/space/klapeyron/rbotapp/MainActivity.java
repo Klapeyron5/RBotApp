@@ -7,12 +7,9 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -32,7 +29,6 @@ public class MainActivity extends Activity {
 
     MainActivity link = this;
     Robot robot;
-    LowLevelNavigationMethods lowLevelNavigationMethods;
     TaskHandler taskHandler;
     TTSManager ttsManager = null;
 
@@ -50,7 +46,6 @@ public class MainActivity extends Activity {
     public TextView Angle;
     public TextView textData;
     public TextView Status;
-    public TextView logs;
 
     float passedWay;
     float currentX;
@@ -95,7 +90,6 @@ public class MainActivity extends Activity {
     }
 
     private void initConstructor() {
-        lowLevelNavigationMethods = new LowLevelNavigationMethods(this);
         /*tts*/
         ttsManager = new TTSManager();
         ttsManager.init(this);
@@ -108,85 +102,9 @@ public class MainActivity extends Activity {
         Angle  = (TextView) findViewById(R.id.textView12);
         textData = (TextView) findViewById(R.id.textView16);
         Status = (TextView) findViewById(R.id.textView14);
-        logs = (TextView) findViewById(R.id.textView);
 
-        Button button1 = (Button) findViewById(R.id.button1);
-        button1.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.FORWARD_MOVE));
-
-        Button button2 = (Button) findViewById(R.id.button2);
-        button2.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.BACK_MOVE));
-
-        Button button3 = (Button) findViewById(R.id.button3);
-        button3.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.TURN_LEFT));
-
-        Button button4 = (Button) findViewById(R.id.button4);
-        button4.setOnTouchListener(new navigationButtonTouch(LowLevelNavigationMethods.TURN_RIGHT));
-
-        Button button7 = (Button) findViewById(R.id.button7);
-        button7.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                try {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        if( robot.isControllerAvailable( BodyController.class ) )
-                        {
-                            BodyController bodyController = null;
-                            bodyController = (BodyController) robot.getController( BodyController.class );
-                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                            {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.turnAround(10f, (float) Math.PI);
-                            }
-                        }
-                    }
-                    if (event.getAction() == MotionEvent.ACTION_UP) {
-                        if( robot.isControllerAvailable( BodyController.class ) )
-                        {
-                            BodyController bodyController = (BodyController) robot.getController( BodyController.class );
-                            if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                            {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                                wheelsController.setWheelsSpeeds(0f,0f);
-                            }
-                        }
-                    }
-                } catch (ControllerException e) {}
-                return false;
-            }
-        });
-
-        Button button8 = (Button) findViewById(R.id.button8);
-        button8.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                try {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        if (robot.isControllerAvailable(BodyController.class)) {
-                            BodyController bodyController = null;
-                            bodyController = (BodyController) robot.getController(BodyController.class);
-                            if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                                wheelsController.moveForward(20f, 100f);
-                            }
-                        }
-                    }
-                    if (event.getAction() == MotionEvent.ACTION_UP) {
-                        if (robot.isControllerAvailable(BodyController.class)) {
-                            BodyController bodyController = (BodyController) robot.getController(BodyController.class);
-                            if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
-                                TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
-                                wheelsController.setWheelsSpeeds(0f, 0f);
-                            }
-                        }
-                    }
-                } catch (ControllerException e) {
-                }
-                return false;
-            }
-        });
-
-        Button button6 = (Button) findViewById(R.id.button6);
-        button6.setOnClickListener(new View.OnClickListener() {
+        Button btnSetTask = (Button) findViewById(R.id.buttonSetTask);
+        btnSetTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 taskHandler = new TaskHandler(link);
@@ -196,8 +114,8 @@ public class MainActivity extends Activity {
             }
         });
 
-        Button button10 = (Button) findViewById(R.id.button10);
-        button10.setOnClickListener(new View.OnClickListener(){
+        Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
+        btnTextSpeech.setOnClickListener(new View.OnClickListener(){
             @Override
         public void onClick(View v){
                 ttsManager.Greeting();
@@ -247,67 +165,7 @@ public class MainActivity extends Activity {
         } catch (ControllerException e) {}
     }*/
 
-    class navigationButtonTouch implements View.OnTouchListener {
-        private ThreadForSimpleNavigationButtons thread;
-        private String key;
-
-        navigationButtonTouch(String k) {
-            key = k;
-        }
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                thread = new ThreadForSimpleNavigationButtons(key);
-                thread.setRunning(true);
-                thread.start();
-            }
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                boolean retry = true;
-                while (retry) {
-                    thread.setRunning(false);
-                    lowLevelNavigationMethods.stopWheelsAction(key);
-                    thread.interrupt();
-        //            Log.i(TAG, "INTERRUPT");
-                    retry = false;
-                }
-            }
-            return false;
-        }
-    }
-
-    class ThreadForSimpleNavigationButtons extends Thread {
-        private boolean running = false;
-        private String lowLevelNavigationKey;
-
-        ThreadForSimpleNavigationButtons(String k) {
-            lowLevelNavigationKey = k;
-        }
-
-        @Override
-        public void run() {
-            while(true) {
-                if(running)
-                    try {
-          //              Log.i(TAG,"RUN");
-                        lowLevelNavigationMethods.runOnKey(lowLevelNavigationKey);
-                        sleep(600);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                else
-                    return;
-            }
-        }
-
-        public void setRunning(boolean b) {
-            running = b;
-       //     Log.i(TAG,"running = "+running);
-        }
-    }
-
     //Bluetooth needed things:
-
    private class WriteTask extends AsyncTask<String, Void, Void> {
         protected Void doInBackground(String... args) {
             try {

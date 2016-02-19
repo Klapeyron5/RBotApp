@@ -248,7 +248,8 @@ public class TaskHandler {
         private float startPath;
         private float purposePath;
         private float standartSpeed = 7.0f;
-        private float correctionSpeed = 5.0f;
+        private float correctionSpeed = 0.5f;
+        private float correctionSpeedCorrection = 0.2f;
         private float correctionDistance = 0.01f;
         private float constX = (float)-Math.PI; //TODO
 
@@ -272,6 +273,8 @@ public class TaskHandler {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
                         float dtAngle = mainActivity.angle;
+                        float corrSpeedLeft = 0;
+                        float corrSpeedRight = 0;
                         while(true) {
                             //TODO //correction direction
                             if (Math.abs(mainActivity.angle - constX) < correctionDistance) {
@@ -280,11 +283,24 @@ public class TaskHandler {
                             }
                             else
                                 if (-mainActivity.angle + constX > correctionDistance) {
-                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed);
+                                    if (-mainActivity.angle + dtAngle > 0)
+                                        corrSpeedLeft+=correctionSpeedCorrection;
+                                    else {
+                                        if (corrSpeedLeft != 0)
+                                            corrSpeedLeft = 0;//-=correctionSpeedCorrection;
+                                    }
+                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed+corrSpeedLeft);
                                     Log.i(mainActivity.TAG, "LEFT");
+                                    dtAngle = mainActivity.angle;
                                 } else {
-                                    wheelsController.setWheelsSpeeds(standartSpeed + correctionSpeed, standartSpeed);
+                                    if (-dtAngle + mainActivity.angle > 0)
+                                        corrSpeedRight+=correctionSpeedCorrection;
+                                    else
+                                        if (corrSpeedLeft != 0)
+                                            corrSpeedRight = 0;//-=correctionSpeedCorrection;
+                                    wheelsController.setWheelsSpeeds(standartSpeed+correctionSpeed+corrSpeedRight, standartSpeed);
                                     Log.i(mainActivity.TAG, "RIGHT");
+                                    dtAngle = mainActivity.angle;
                                 }
 
                             checkThread = new CheckThread(startPath,wheelsController);

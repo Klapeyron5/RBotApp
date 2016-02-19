@@ -1,9 +1,15 @@
 package space.klapeyron.rbotapp;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class Navigation {
     Navigation() {}
+    Navigation(TaskHandler t) {
+        taskHandler = t;
+    }
+
     int[][] landscape = {
             {1,1,1,1,1,1,1,1,1,1,1,1,1},
             {1,1,1,0,0,0,0,0,0,0,0,0,1},
@@ -39,7 +45,7 @@ public class Navigation {
     int n = landscape[0].length; // высота карты
 
     int[] start = {1,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
-    private int[] finish = {16,9}; // Конечная точка
+    private int[] finish = {10,3}; // Конечная точка
     int[] tick = start; // Текущая точка (изначально равна начальной)
     int[][] neighbour = new int[4][3]; // Матрица координат (первые две строки) и значений эвристической функции (третья строка) четырех точек-соседей (столбец соответсвует номеру)
     int F; // Эвристическая функция
@@ -48,7 +54,7 @@ public class Navigation {
 
     int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n)
 
-    MainActivity mainActivity;
+    TaskHandler taskHandler;
     ArrayList<Integer> path = new ArrayList<Integer>();
 
     public ArrayList<Integer> getPath()
@@ -88,9 +94,30 @@ public class Navigation {
 
 
         //TODO //correct start angle
+        if (taskHandler.currentDirection != Direction[0]) {
+            int currDir = taskHandler.currentDirection;
+            if     (((currDir == 0) && (Direction[0] == 1)) ||
+                    ((currDir == 1) && (Direction[0] == 2)) ||
+                    ((currDir == 2) && (Direction[0] == 3)) ||
+                    ((currDir == 3) && (Direction[0] == 0))) {
+                path.add(0);
+                path.add(1);
+            } else
+                if (((currDir == 0) && (Direction[0] == 3)) ||
+                    ((currDir == 3) && (Direction[0] == 2)) ||
+                    ((currDir == 2) && (Direction[0] == 1)) ||
+                    ((currDir == 1) && (Direction[0] == 0))) {
+                path.add(2);
+                path.add(1);
+            } else
+                if (Math.abs(currDir - Direction[0]) == 2) {
+                    Log.i(MainActivity.TAG,"PI turn");
+                    path.add(2); //TODO //not work
+                    path.add(2);
+            }
+        }
 
-
-        path.add(1);   //TODO //first move only forward now
+        path.add(1);
         for(int i=1;i<Direction.length;i++) {
             if(Direction[i] == Direction[i-1])
                 path.add(1);

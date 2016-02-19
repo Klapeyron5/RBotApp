@@ -1,25 +1,16 @@
 package space.klapeyron.rbotapp;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
@@ -40,7 +31,7 @@ public class MainActivity extends Activity {
     MainActivity link = this;
     Robot robot;
     LowLevelNavigationMethods lowLevelNavigationMethods;
-    LowLevelNavigationTasks lowLevelNavigationTasks;
+    TaskHandler taskHandler;
     TTSManager ttsManager = null;
 
     private ServerThread serverThread;
@@ -194,9 +185,9 @@ public class MainActivity extends Activity {
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+                taskHandler = new TaskHandler(link);
                 try {
-                    lowLevelNavigationTasks.setTask();
+                    taskHandler.setTask();
                 } catch (ControllerException e) {}
             }
         });
@@ -246,9 +237,9 @@ public class MainActivity extends Activity {
     }
 
     /*public void setTaskFromBT(int Y,int X) {
-        lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+        taskHandler = new TaskHandler(link);
         try {
-            lowLevelNavigationTasks.setTaskFromBT(Y,X);
+            taskHandler.setTaskFromBT(Y,X);
         } catch (ControllerException e) {}
     }*/
 
@@ -336,11 +327,11 @@ public class MainActivity extends Activity {
                             textData.setText(textData.getText().toString() + "\n" + message); // просмотр строк сообщений
                             //Прослушка с порта bt
                             if (hashString == textData.getText().toString()) {
-                                lowLevelNavigationTasks = new LowLevelNavigationTasks(link);
+                                taskHandler = new TaskHandler(link);
                                 status = "Ok";
                                 Status.setText(status);
                                 try {
-                                    lowLevelNavigationTasks.setTask();
+                                    taskHandler.setTask();
                                 } catch (ControllerException e) {
                                 }
 

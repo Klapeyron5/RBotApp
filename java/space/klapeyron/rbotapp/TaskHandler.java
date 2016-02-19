@@ -10,35 +10,29 @@ import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerExcepti
 import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 
 
-public class LowLevelNavigationTasks {
-    MainActivity mainActivity;
-    float startPath;
-    float startAngle;
-    Robot robot;
-    private int startDirection = 0;
-    private int direction = startDirection;
+public class TaskHandler {
+    private MainActivity mainActivity;
+    private Robot robot;
+    public int currentDirection = 0; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
 
-    int[] arrayPath = {1,1,2,1,1,0,1};
-    ArrayList<Integer> path;//0-right; 1-forward; 2-left;
+    private int[] arrayPath = {1,1,2,1,1,0,1};
+    private ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
-    LowLevelNavigationTasks(MainActivity m) {
+    TaskHandler(MainActivity m) {
         mainActivity = m;
-        startPath = mainActivity.passedWay;
-        startAngle = mainActivity.angle;
         robot = mainActivity.robot;
     }
 
     public void setTask() throws ControllerException {
-        Navigation navigation = new Navigation();
+        Navigation navigation = new Navigation(this);
         path = navigation.getPath();
 
    //     path = new ArrayList<>();
    //     arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
-
     }
 
     //TODO
@@ -134,6 +128,7 @@ public class LowLevelNavigationTasks {
 
         @Override
         public void run() {
+            Log.i(MainActivity.TAG, "StartingForwardThread started");
             if( robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
@@ -174,7 +169,7 @@ public class LowLevelNavigationTasks {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)) {
+                    if(!(mainActivity.passedWay - startPath < TaskHandler.forwardDistance)) {
                         stopFlag = true;
                         return;
                     }
@@ -195,6 +190,7 @@ public class LowLevelNavigationTasks {
 
         @Override
         public void run() {
+            Log.i(MainActivity.TAG,"ForwardThreadForSingleDistance started");
             if( robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
@@ -235,7 +231,7 @@ public class LowLevelNavigationTasks {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.passedWay - startPath < LowLevelNavigationTasks.forwardDistance)) {
+                    if(!(mainActivity.passedWay - startPath < TaskHandler.forwardDistance)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
@@ -254,7 +250,7 @@ public class LowLevelNavigationTasks {
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.passedWay;
-            purposePath = straightLineCoeff * LowLevelNavigationTasks.forwardDistance;
+            purposePath = straightLineCoeff * TaskHandler.forwardDistance;
         }
 
         @Override
@@ -271,7 +267,7 @@ public class LowLevelNavigationTasks {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
                         while(true) {
-                            wheelsController.setWheelsSpeeds(10f, 10f);
+                            wheelsController.setWheelsSpeeds(20f, 20f);
                             checkThread = new CheckThread(startPath,wheelsController);
                             checkThread.setRunning(true);
                             checkThread.start();

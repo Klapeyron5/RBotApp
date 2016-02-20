@@ -248,10 +248,10 @@ public class TaskHandler {
         private float startPath;
         private float purposePath;
         private float standartSpeed = 7.0f;
-        private float correctionSpeed = 0.5f;
-        private float correctionSpeedCorrection = 0.2f;
+        private float correctionSpeed = 0.2f;
+        private float correctionSpeedCorrection = 0.1f;
         private float correctionDistance = 0.01f;
-        private float constX = (float)-Math.PI; //TODO
+        private float constX = 0;//(float)-Math.PI; //TODO
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.passedWay;
@@ -277,29 +277,31 @@ public class TaskHandler {
                         float corrSpeedRight = 0;
                         while(true) {
                             //TODO //correction direction
+                            Log.i(mainActivity.TAG," ");
+                            Log.i(mainActivity.TAG,""+mainActivity.angle);
                             if (Math.abs(mainActivity.angle - constX) < correctionDistance) {
                                 wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed);
                                 Log.i(mainActivity.TAG,"OK");
                             }
                             else
-                                if (-mainActivity.angle + constX > correctionDistance) {
+                                if (!(mainActivity.angle > correctionDistance)) {
+                                    Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
                                     if (-mainActivity.angle + dtAngle > 0)
-                                        corrSpeedLeft+=correctionSpeedCorrection;
+                                        corrSpeedLeft += correctionSpeedCorrection;
                                     else {
                                         if (corrSpeedLeft != 0)
-                                            corrSpeedLeft = 0;//-=correctionSpeedCorrection;
+                                            corrSpeedLeft -= correctionSpeedCorrection;
                                     }
-                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed+corrSpeedLeft);
-                                    Log.i(mainActivity.TAG, "LEFT");
+                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed + corrSpeedLeft);
                                     dtAngle = mainActivity.angle;
                                 } else {
+                                    Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
                                     if (-dtAngle + mainActivity.angle > 0)
-                                        corrSpeedRight+=correctionSpeedCorrection;
+                                        corrSpeedRight += correctionSpeedCorrection;
                                     else
                                         if (corrSpeedLeft != 0)
-                                            corrSpeedRight = 0;//-=correctionSpeedCorrection;
-                                    wheelsController.setWheelsSpeeds(standartSpeed+correctionSpeed+corrSpeedRight, standartSpeed);
-                                    Log.i(mainActivity.TAG, "RIGHT");
+                                            corrSpeedRight -= correctionSpeedCorrection;
+                                    wheelsController.setWheelsSpeeds(standartSpeed + correctionSpeed + corrSpeedRight, standartSpeed);
                                     dtAngle = mainActivity.angle;
                                 }
 

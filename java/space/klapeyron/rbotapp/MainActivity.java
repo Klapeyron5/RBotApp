@@ -158,13 +158,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    /*public void setTaskFromBT(int Y,int X) {
-        taskHandler = new TaskHandler(link);
-        try {
-            taskHandler.setTaskFromBT(Y,X);
-        } catch (ControllerException e) {}
-    }*/
-
     //Bluetooth needed things:
    private class WriteTask extends AsyncTask<String, Void, Void> {
         protected Void doInBackground(String... args) {
@@ -186,11 +179,18 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textData.setText(textData.getText().toString() + "\n" + message); // просмотр строк сообщений
+                            textData.setText(message); // просмотр строк сообщений
+                            String[] recievedMessage = message.split("/", 3);
                             //Прослушка с порта bt
-                            if (hashString == textData.getText().toString()) {
+                            if (hashString.equals(recievedMessage[0])) {
+                                Navigation navigation = new Navigation();
                                 taskHandler = new TaskHandler(link);
-                                status = "Ok";
+
+                                int X = Integer.parseInt(recievedMessage[1]);
+                                int Y = Integer.parseInt(recievedMessage[2]);
+                                navigation.setFinish(Y,X);
+
+                                status = "Connected";
                                 Status.setText(status);
                                 try {
                                     taskHandler.setTask();
@@ -199,7 +199,7 @@ public class MainActivity extends Activity {
 
                             }
                             else {
-                                status = "Match not found";
+                                status = recievedMessage[0]+"+"+recievedMessage[1]+"+"+recievedMessage[2];
                                 Status.setText(status);}
                         }
                     });

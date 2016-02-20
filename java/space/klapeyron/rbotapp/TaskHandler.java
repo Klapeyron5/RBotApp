@@ -13,7 +13,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 public class TaskHandler {
     private MainActivity mainActivity;
     private Robot robot;
-    public int currentDirection = 0; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
+    public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
 
@@ -261,7 +261,7 @@ public class TaskHandler {
         private float correctionDistance = 0.01f;
         private float constAngle = 0;//(float)-Math.PI; //TODO
         private TwoWheelsBodyController wheelsController = null;
-        private float dtAngle = mainActivity.angle;
+        private float dtAngle = mainActivity.angle; //angle with the last iteration (for derivative counting)
         private float corrSpeedLeft = 0;
         private float corrSpeedRight = 0;
 
@@ -318,37 +318,41 @@ public class TaskHandler {
         private void correctionCode(int currentDirection) {
             switch(currentDirection) {
                 case 0:
-                    Log.i(mainActivity.TAG, "case0");
-                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    Log.i(mainActivity.TAG, "\"_________________case0_________________\"");
+                    Log.i(mainActivity.TAG,"angle: "+mainActivity.angle);
                     if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(mainActivity.TAG,"OK");
-                    }
-                    else
-                    if (!(mainActivity.angle > correctionDistance)) {
-                        Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
-                        if (-mainActivity.angle + dtAngle > 0)
-                            corrSpeedLeft += correctionSpeedCorrection;
-                        else {
-                            if (corrSpeedLeft != 0)
-                                corrSpeedLeft -= correctionSpeedCorrection;
+                    } else
+                        if (!(mainActivity.angle > correctionDistance)) {
+                            Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
+                            if (-mainActivity.angle + dtAngle > 0) {
+                                corrSpeedLeft += correctionSpeedCorrection;
+                                Log.i(mainActivity.TAG, "derivative > 0");
+                            } else {
+                                if (corrSpeedLeft != 0)
+                                    corrSpeedLeft -= correctionSpeedCorrection;
+                                Log.i(mainActivity.TAG, "derivative < 0");
+                            }
+                            wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
+                            dtAngle = mainActivity.angle;
+                        } else {
+                            Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
+                            if (-dtAngle + mainActivity.angle > 0) {
+                                corrSpeedRight += correctionSpeedCorrection;
+                                Log.i(mainActivity.TAG, "derivative > 0");
+                            } else {
+                                if (corrSpeedLeft != 0)
+                                    corrSpeedRight -= correctionSpeedCorrection;
+                                Log.i(mainActivity.TAG, "derivative < 0");
+                            }
+                            wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
+                            dtAngle = mainActivity.angle;
                         }
-                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                        dtAngle = mainActivity.angle;
-                    } else {
-                        Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
-                        if (-dtAngle + mainActivity.angle > 0)
-                            corrSpeedRight += correctionSpeedCorrection;
-                        else
-                        if (corrSpeedLeft != 0)
-                            corrSpeedRight -= correctionSpeedCorrection;
-                        wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                        dtAngle = mainActivity.angle;
-                    }
                     break;
                 case 1:
-                    Log.i(mainActivity.TAG, "case1");
-                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    Log.i(mainActivity.TAG, "\"__________________case1__________________\"");
+                    Log.i(mainActivity.TAG,"angle: "+mainActivity.angle);
                     if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(mainActivity.TAG,"OK");
@@ -356,31 +360,43 @@ public class TaskHandler {
                     else
                     if (!(mainActivity.angle - constAngle > correctionDistance)) {
                         Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
-                        if (-mainActivity.angle + dtAngle > 0)
+
+                        //correction depending on derivation started
+                        if (-mainActivity.angle + dtAngle > 0) {
                             corrSpeedLeft += correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        }
                         else {
                             if (corrSpeedLeft != 0)
                                 corrSpeedLeft -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
                         }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
                         dtAngle = mainActivity.angle;
                     } else {
                         Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
-                        if (-dtAngle + mainActivity.angle > 0)
+
+                        //correction depending on derivation started
+                        if (-dtAngle + mainActivity.angle > 0) {
                             corrSpeedRight += correctionSpeedCorrection;
-                        else
-                        if (corrSpeedLeft != 0)
-                            corrSpeedRight -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        } else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedRight -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
+                        }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
                         dtAngle = mainActivity.angle;
                     }
                     break;
                 case 2:
-                    Log.i(mainActivity.TAG, "case2");
-                    Log.i(mainActivity.TAG,""+mainActivity.angle);
-                    float mAangel = mainActivity.angle;
-                    if (mAangel < 0)
-                        mAangel += (float)2*Math.PI;
+                    Log.i(mainActivity.TAG, "\"__________________case2__________________\"");
+                    Log.i(mainActivity.TAG,"angle: "+mainActivity.angle);
+                    float mAangel = anglePlus2PI(mainActivity.angle); //mainActivity.angle
                     if (Math.abs(mAangel - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(mainActivity.TAG,"OK");
@@ -388,28 +404,42 @@ public class TaskHandler {
                     else
                     if (constAngle - mAangel > correctionDistance) {
                         Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
-                  //      if (-mainActivity.angle + dtAngle > 0)
-                  //          corrSpeedLeft += correctionSpeedCorrection;
-                  //      else {
-                  //          if (corrSpeedLeft != 0)
-                  //              corrSpeedLeft -= correctionSpeedCorrection;
-                  //      }
+
+                        //correction depending on derivation started
+                        if (mAangel - dtAngle > 0) {
+                            corrSpeedLeft += correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        }
+                        else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedLeft -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
+                        }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = anglePlus2PI(mainActivity.angle);
                     } else {
                         Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
-                    //    if (-dtAngle + mainActivity.angle > 0)
-                    //        corrSpeedRight += correctionSpeedCorrection;
-                    //    else
-                    //    if (corrSpeedLeft != 0)
-                    //        corrSpeedRight -= correctionSpeedCorrection;
+
+                        //correction depending on derivation started
+                        if (dtAngle - mAangel > 0) {
+                            corrSpeedRight += correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        } else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedRight -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
+                        }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = anglePlus2PI(mainActivity.angle);
                     }
                     break;
                 case 3:
-                    Log.i(mainActivity.TAG, "case3");
-                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    Log.i(mainActivity.TAG, "\"__________________case3__________________\"");
+                    Log.i(mainActivity.TAG,"angle: "+mainActivity.angle);
                     if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(mainActivity.TAG,"OK");
@@ -417,26 +447,45 @@ public class TaskHandler {
                     else
                     if (!(mainActivity.angle - constAngle > correctionDistance)) {
                         Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
-            //            if (-mainActivity.angle + dtAngle > 0)
-            //                corrSpeedLeft += correctionSpeedCorrection;
-            //            else {
-            //                if (corrSpeedLeft != 0)
-            //                    corrSpeedLeft -= correctionSpeedCorrection;
-            //            }
+
+                        //correction depending on derivation started
+                        if (dtAngle - mainActivity.angle > 0) {
+                            corrSpeedLeft += correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        } else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedLeft -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
+                        }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
                         dtAngle = mainActivity.angle;
                     } else {
                         Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
-            //            if (-dtAngle + mainActivity.angle > 0)
-            //                corrSpeedRight += correctionSpeedCorrection;
-            //            else
-            //            if (corrSpeedLeft != 0)
-            //                corrSpeedRight -= correctionSpeedCorrection;
+
+                        //correction depending on derivation started
+                        if (mainActivity.angle - dtAngle > 0) {
+                            corrSpeedRight += correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative > 0");
+                        } else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedRight -= correctionSpeedCorrection;
+                            Log.i(mainActivity.TAG, "derivative < 0");
+                        }
+                        //correction depending on derivation finished
+
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
                         dtAngle = mainActivity.angle;
                     }
                     break;
             }
+        }
+
+        private float anglePlus2PI(float angle) {
+            if (angle < 0)
+                angle += (float)2*Math.PI;
+            return angle;
         }
 
         class CheckThread extends Thread {

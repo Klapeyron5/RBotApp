@@ -13,7 +13,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 public class TaskHandler {
     private MainActivity mainActivity;
     private Robot robot;
-    public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
+    public int currentDirection = 0; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
 
@@ -54,6 +54,10 @@ public class TaskHandler {
             for(int i=0;i<path.size();i++) {
                 switch(path.get(i)) {
                     case 0:
+                        if(currentDirection!=3)
+                            currentDirection++;
+                        else
+                            currentDirection = 0;
                         turnRight();
                         break;
                     case 1:
@@ -68,6 +72,10 @@ public class TaskHandler {
                             }
                         break;
                     case 2:
+                        if(currentDirection!=0)
+                            currentDirection--;
+                        else
+                            currentDirection = 3;
                         turnLeft();
                         break;
                 }
@@ -247,11 +255,15 @@ public class TaskHandler {
     class ForwardThread extends Thread {
         private float startPath;
         private float purposePath;
-        private float standartSpeed = 7.0f;
-        private float correctionSpeed = 0.5f;
-        private float correctionSpeedCorrection = 0.2f;
+        private float standardSpeed = 7.0f;
+        private float correctionSpeed = 0.2f;
+        private float correctionSpeedCorrection = 0.1f;
         private float correctionDistance = 0.01f;
-        private float constX = (float)-Math.PI; //TODO
+        private float constAngle = 0;//(float)-Math.PI; //TODO
+        private TwoWheelsBodyController wheelsController = null;
+        private float dtAngle = mainActivity.angle;
+        private float corrSpeedLeft = 0;
+        private float corrSpeedRight = 0;
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.passedWay;
@@ -260,8 +272,22 @@ public class TaskHandler {
 
         @Override
         public void run() {
-            constX = mainActivity.angle;
-            Log.i(MainActivity.TAG, "ForwardThread started");
+        //    constAngle = mainActivity.angle;
+            switch(currentDirection) {
+                case 0:
+                    constAngle = 0;
+                    break;
+                case 1:
+                    constAngle = (float)-Math.PI/2;
+                    break;
+                case 2:
+                    constAngle = (float)Math.PI;
+                    break;
+                case 3:
+                    constAngle = (float)Math.PI/2;
+                    break;
+            }
+            Log.i(MainActivity.TAG, "ForwardThread started "+purposePath+" m;  direction "+currentDirection);
             if( robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
@@ -269,40 +295,13 @@ public class TaskHandler {
                     bodyController = (BodyController) robot.getController( BodyController.class );
                     if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                     {
-                        TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
-                        float dtAngle = mainActivity.angle;
-                        float corrSpeedLeft = 0;
-                        float corrSpeedRight = 0;
+                        dtAngle = mainActivity.angle;
+                        corrSpeedLeft = 0;
+                        corrSpeedRight = 0;
                         while(true) {
-                            //TODO //correction direction
-                            if (Math.abs(mainActivity.angle - constX) < correctionDistance) {
-                                wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed);
-                                Log.i(mainActivity.TAG,"OK");
-                            }
-                            else
-                                if (-mainActivity.angle + constX > correctionDistance) {
-                                    if (-mainActivity.angle + dtAngle > 0)
-                                        corrSpeedLeft+=correctionSpeedCorrection;
-                                    else {
-                                        if (corrSpeedLeft != 0)
-                                            corrSpeedLeft = 0;//-=correctionSpeedCorrection;
-                                    }
-                                    wheelsController.setWheelsSpeeds(standartSpeed, standartSpeed + correctionSpeed+corrSpeedLeft);
-                                    Log.i(mainActivity.TAG, "LEFT");
-                                    dtAngle = mainActivity.angle;
-                                } else {
-                                    if (-dtAngle + mainActivity.angle > 0)
-                                        corrSpeedRight+=correctionSpeedCorrection;
-                                    else
-                                        if (corrSpeedLeft != 0)
-                                            corrSpeedRight = 0;//-=correctionSpeedCorrection;
-                                    wheelsController.setWheelsSpeeds(standartSpeed+correctionSpeed+corrSpeedRight, standartSpeed);
-                                    Log.i(mainActivity.TAG, "RIGHT");
-                                    dtAngle = mainActivity.angle;
-                                }
-
+                            correctionCode(currentDirection); //TODO
                             checkThread = new CheckThread(startPath,wheelsController);
                             checkThread.setRunning(true);
                             checkThread.start();
@@ -313,6 +312,130 @@ public class TaskHandler {
                         }
                     }
                 } catch (ControllerException e) {} catch (InterruptedException e) {}
+            }
+        }
+
+        private void correctionCode(int currentDirection) {
+            switch(currentDirection) {
+                case 0:
+                    Log.i(mainActivity.TAG, "case0");
+                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
+                        Log.i(mainActivity.TAG,"OK");
+                    }
+                    else
+                    if (!(mainActivity.angle > correctionDistance)) {
+                        Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
+                        if (-mainActivity.angle + dtAngle > 0)
+                            corrSpeedLeft += correctionSpeedCorrection;
+                        else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedLeft -= correctionSpeedCorrection;
+                        }
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
+                        dtAngle = mainActivity.angle;
+                    } else {
+                        Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
+                        if (-dtAngle + mainActivity.angle > 0)
+                            corrSpeedRight += correctionSpeedCorrection;
+                        else
+                        if (corrSpeedLeft != 0)
+                            corrSpeedRight -= correctionSpeedCorrection;
+                        wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
+                        dtAngle = mainActivity.angle;
+                    }
+                    break;
+                case 1:
+                    Log.i(mainActivity.TAG, "case1");
+                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
+                        Log.i(mainActivity.TAG,"OK");
+                    }
+                    else
+                    if (!(mainActivity.angle - constAngle > correctionDistance)) {
+                        Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
+                        if (-mainActivity.angle + dtAngle > 0)
+                            corrSpeedLeft += correctionSpeedCorrection;
+                        else {
+                            if (corrSpeedLeft != 0)
+                                corrSpeedLeft -= correctionSpeedCorrection;
+                        }
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
+                        dtAngle = mainActivity.angle;
+                    } else {
+                        Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
+                        if (-dtAngle + mainActivity.angle > 0)
+                            corrSpeedRight += correctionSpeedCorrection;
+                        else
+                        if (corrSpeedLeft != 0)
+                            corrSpeedRight -= correctionSpeedCorrection;
+                        wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
+                        dtAngle = mainActivity.angle;
+                    }
+                    break;
+                case 2:
+                    Log.i(mainActivity.TAG, "case2");
+                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    float mAangel = mainActivity.angle;
+                    if (mAangel < 0)
+                        mAangel += (float)2*Math.PI;
+                    if (Math.abs(mAangel - constAngle) < correctionDistance) {
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
+                        Log.i(mainActivity.TAG,"OK");
+                    }
+                    else
+                    if (constAngle - mAangel > correctionDistance) {
+                        Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
+                  //      if (-mainActivity.angle + dtAngle > 0)
+                  //          corrSpeedLeft += correctionSpeedCorrection;
+                  //      else {
+                  //          if (corrSpeedLeft != 0)
+                  //              corrSpeedLeft -= correctionSpeedCorrection;
+                  //      }
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
+                        dtAngle = mainActivity.angle;
+                    } else {
+                        Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
+                    //    if (-dtAngle + mainActivity.angle > 0)
+                    //        corrSpeedRight += correctionSpeedCorrection;
+                    //    else
+                    //    if (corrSpeedLeft != 0)
+                    //        corrSpeedRight -= correctionSpeedCorrection;
+                        wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
+                        dtAngle = mainActivity.angle;
+                    }
+                    break;
+                case 3:
+                    Log.i(mainActivity.TAG, "case3");
+                    Log.i(mainActivity.TAG,""+mainActivity.angle);
+                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
+                        Log.i(mainActivity.TAG,"OK");
+                    }
+                    else
+                    if (!(mainActivity.angle - constAngle > correctionDistance)) {
+                        Log.i(mainActivity.TAG, "LEFT "+ mainActivity.angle);
+            //            if (-mainActivity.angle + dtAngle > 0)
+            //                corrSpeedLeft += correctionSpeedCorrection;
+            //            else {
+            //                if (corrSpeedLeft != 0)
+            //                    corrSpeedLeft -= correctionSpeedCorrection;
+            //            }
+                        wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
+                        dtAngle = mainActivity.angle;
+                    } else {
+                        Log.i(mainActivity.TAG, "RIGHT "+mainActivity.angle);
+            //            if (-dtAngle + mainActivity.angle > 0)
+            //                corrSpeedRight += correctionSpeedCorrection;
+            //            else
+            //            if (corrSpeedLeft != 0)
+            //                corrSpeedRight -= correctionSpeedCorrection;
+                        wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
+                        dtAngle = mainActivity.angle;
+                    }
+                    break;
             }
         }
 

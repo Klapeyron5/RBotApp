@@ -13,7 +13,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 public class TaskHandler {
     private MainActivity mainActivity;
     private Robot robot;
-    public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
+    public int currentDirection = 0; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
 

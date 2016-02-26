@@ -28,6 +28,12 @@ import space.klapeyron.rbotapp.BluetoothClientConnection.ServerThread;
 public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
+    public String serverState;
+    public static final String LoadedServerState = "loaded";
+
+    public String robotConnectionState;
+    public static final String OnConnectedRobotState = "Connected";
+
     MainActivity link = this;
     Robot robot;
     TaskHandler taskHandler;
@@ -38,7 +44,8 @@ public class MainActivity extends Activity {
 
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
     public static String hashString = "go";
-    //TODO
+
+    //customizing server interface
     public TextView path;
     public TextView X;
     public TextView Y;
@@ -50,6 +57,7 @@ public class MainActivity extends Activity {
     EditText editText1;
     EditText editText2;
 
+    //odometry info
     float passedWay;
     float currentX;
     float currentY;
@@ -65,17 +73,20 @@ public class MainActivity extends Activity {
 
         initRobot();
         initConstructor();
+
+        serverState = LoadedServerState;
     }
 
     private void initRobot() {
         robot = new Robot(this);
         taskHandler = new TaskHandler(link);
 
-        RobotStateListener robotStateListener = new RobotStateListener() {
+        final RobotStateListener robotStateListener = new RobotStateListener() {
             @Override
             public void onRobotReady() {
                 odometryMethod();
                 Log.i(TAG, "onRobotReady");
+                robotConnectionState = OnConnectedRobotState;
             }
 
             @Override
@@ -128,7 +139,6 @@ public class MainActivity extends Activity {
                 ttsManager.Greeting();
             }
         });
-
     }
 
     private void odometryMethod() {

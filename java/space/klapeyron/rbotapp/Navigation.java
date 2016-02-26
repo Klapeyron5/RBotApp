@@ -5,7 +5,8 @@ import android.util.Log;
 import java.util.ArrayList;
 
 public class Navigation {
-    Navigation() {}
+    Navigation() {
+    }
     Navigation(TaskHandler t) {
         taskHandler = t;
     }
@@ -38,7 +39,7 @@ public class Navigation {
     int m = landscape.length; //длина карты
     int n = landscape[0].length; // высота карты
 
-    int[] start = {5,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
+    private int[] start = {5,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
     public int[] finish = {16,9}; // Конечная точка
     int[] tick = start; // Текущая точка (изначально равна начальной)
     int[][] neighbour = new int[4][3]; // Матрица координат (первые две строки) и значений эвристической функции (третья строка) четырех точек-соседей (столбец соответсвует номеру)
@@ -89,6 +90,7 @@ public class Navigation {
 
 
         //TODO //correct start angle
+        path.clear();
         if (taskHandler.currentDirection != Direction[0]) {
             int currDir = taskHandler.currentDirection;
             if     (((currDir == 0) && (Direction[0] == 1)) ||
@@ -113,7 +115,6 @@ public class Navigation {
             }
         }
 
-    //    path.add(1);
         for(int i=1;i<Direction.length;i++) {
             if(Direction[i] == Direction[i-1])
                 path.add(1);
@@ -235,5 +236,10 @@ public class Navigation {
 
     public void setFinish(int Y,int X) {
         finish = new int[] {Y,X};
+    }
+
+
+    public int[] getStart() {
+        return start;
     }
 }

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
@@ -46,6 +47,8 @@ public class MainActivity extends Activity {
     public TextView Angle;
     public TextView textData;
     public TextView Status;
+    EditText editText1;
+    EditText editText2;
 
     float passedWay;
     float currentX;
@@ -66,6 +69,7 @@ public class MainActivity extends Activity {
 
     private void initRobot() {
         robot = new Robot(this);
+        taskHandler = new TaskHandler(link);
 
         RobotStateListener robotStateListener = new RobotStateListener() {
             @Override
@@ -107,12 +111,15 @@ public class MainActivity extends Activity {
         btnSetTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                taskHandler = new TaskHandler(link);
+        //        taskHandler = new TaskHandler(link);
                 try {
                     taskHandler.setTask();
                 } catch (ControllerException e) {}
             }
         });
+
+        editText1 = (EditText) findViewById(R.id.editText1);
+        editText2 = (EditText) findViewById(R.id.editText2);
 
         Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
         btnTextSpeech.setOnClickListener(new View.OnClickListener(){

@@ -1,5 +1,6 @@
 package space.klapeyron.rbotapp;
 
+import android.text.Editable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 public class TaskHandler {
     private MainActivity mainActivity;
     private Robot robot;
+    private Navigation navigation;
     public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     private final static float forwardDistance = 0.5f;
@@ -23,16 +25,25 @@ public class TaskHandler {
     TaskHandler(MainActivity m) {
         mainActivity = m;
         robot = mainActivity.robot;
+        navigation = new Navigation(this);
     }
 
     public void setTask() throws ControllerException {
-        Navigation navigation = new Navigation(this);
+        Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
+
+        int Y = Integer.parseInt(mainActivity.editText1.getText().toString());
+        int X = Integer.parseInt(mainActivity.editText2.getText().toString());
+        navigation.setFinish(Y,X);
+
         path = navigation.getPath();
 
         Log.i(MainActivity.TAG,"PATH");
 
         for(int i=0;i<path.size();i++)
             Log.i(MainActivity.TAG,path.get(i)+"");
+
+
+        Log.i(MainActivity.TAG,"Finish coordinates: "+navigation.finish[0]+" "+navigation.finish[1]);
 
    //     path = new ArrayList<>();
    //     arrayInList();//TODO

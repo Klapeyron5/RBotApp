@@ -77,6 +77,13 @@ public class MainActivity extends Activity {
         serverState = LoadedServerState;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        serverThread = new ServerThread(communicatorService);
+        serverThread.start();
+    }
+
     private void initRobot() {
         robot = new Robot(this);
         taskHandler = new TaskHandler(link);
@@ -109,36 +116,35 @@ public class MainActivity extends Activity {
         ttsManager = new TTSManager();
         ttsManager.init(this);
 
-        path   = (TextView) findViewById(R.id.textView7);
-        X      = (TextView) findViewById(R.id.textView8);
-        Y      = (TextView) findViewById(R.id.textView9);
-        SpeedL = (TextView) findViewById(R.id.textView10);
-        SpeedR = (TextView) findViewById(R.id.textView11);
-        Angle  = (TextView) findViewById(R.id.textView12);
-        textData = (TextView) findViewById(R.id.textView16);
-        Status = (TextView) findViewById(R.id.textView14);
+        path   = (TextView) findViewById(R.id.textViewPath);
+        X      = (TextView) findViewById(R.id.textViewX);
+        Y      = (TextView) findViewById(R.id.textViewY);
+        SpeedL = (TextView) findViewById(R.id.textViewSpeedL);
+        SpeedR = (TextView) findViewById(R.id.textViewSpeedR);
+        Angle  = (TextView) findViewById(R.id.textViewAngle);
+    //    textData = (TextView) findViewById(R.id.textView16);
+        Status = (TextView) findViewById(R.id.textViewServerState);
 
         Button btnSetTask = (Button) findViewById(R.id.buttonSetTask);
         btnSetTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-        //        taskHandler = new TaskHandler(link);
                 try {
                     taskHandler.setTask();
                 } catch (ControllerException e) {}
             }
         });
 
-        editText1 = (EditText) findViewById(R.id.editText1);
-        editText2 = (EditText) findViewById(R.id.editText2);
+     //   editText1 = (EditText) findViewById(R.id.editText1);
+     //   editText2 = (EditText) findViewById(R.id.editText2);
 
-        Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
+  /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
         btnTextSpeech.setOnClickListener(new View.OnClickListener(){
             @Override
         public void onClick(View v){
                 ttsManager.Greeting();
             }
-        });
+        });*/
     }
 
     private void odometryMethod() {
@@ -250,11 +256,4 @@ public class MainActivity extends Activity {
         }
         if (serverThread != null) serverThread.cancel();
     }*/
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        serverThread = new ServerThread(communicatorService);
-        serverThread.start();
-    }
 }

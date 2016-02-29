@@ -1,6 +1,5 @@
 package space.klapeyron.rbotapp;
 
-import android.text.Editable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -29,11 +28,18 @@ public class TaskHandler {
     }
 
     public void setTask() throws ControllerException {
-        Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
 
-        int Y = Integer.parseInt(mainActivity.editText1.getText().toString());
-        int X = Integer.parseInt(mainActivity.editText2.getText().toString());
-        navigation.setFinish(Y,X);
+        int fY = Integer.parseInt(mainActivity.editTextFinishY.getText().toString());
+        int fX = Integer.parseInt(mainActivity.editTextFinishX.getText().toString());
+        int sY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());
+        int sX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
+        int dir = Integer.parseInt(mainActivity.editTextDirection.getText().toString());
+        currentDirection = dir;
+        navigation.setStart(sY, sX);
+        navigation.setFinish(fY,fX);
+
+        Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
+        Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
 
         path = navigation.getPath();
 
@@ -42,23 +48,11 @@ public class TaskHandler {
         for(int i=0;i<path.size();i++)
             Log.i(MainActivity.TAG,path.get(i)+"");
 
-
-        Log.i(MainActivity.TAG,"Finish coordinates: "+navigation.finish[0]+" "+navigation.finish[1]);
-
    //     path = new ArrayList<>();
    //     arrayInList();//TODO
         TaskThread taskThread = new TaskThread();
         taskThread.start();
     }
-
-    //TODO
-    /*public void setTaskFromBT(int Y,int X) throws ControllerException {
-        Navigation navigation = new Navigation();
-        navigation.setFinish(Y,X);
-        path = navigation.getPath();
-        TaskThread taskThread = new TaskThread();
-        taskThread.start();
-    }*/
 
     class TaskThread extends Thread {
         @Override
@@ -96,6 +90,7 @@ public class TaskHandler {
                         break;
                 }
             }
+            navigation.setStart(navigation.finish[0],navigation.finish[1]);
             Log.i(MainActivity.TAG, "setTask finish passedWay " + mainActivity.passedWay);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.passedWay-startPath));
         }

@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
     public static final String LoadedServerState = "loaded";
 
     public String robotConnectionState;
-    public static final String OnConnectedRobotState = "Connected";
+    public static final String OnConnectedRobotState = "connected";
 
     MainActivity link = this;
     Robot robot;
@@ -46,24 +46,28 @@ public class MainActivity extends Activity {
     public static String hashString = "go";
 
     //customizing server interface
-    public TextView path;
-    public TextView X;
-    public TextView Y;
-    public TextView SpeedL;
-    public TextView SpeedR;
-    public TextView Angle;
-    public TextView textData;
-    public TextView Status;
-    EditText editText1;
-    EditText editText2;
+    public TextView textViewPath;
+    public TextView textViewAngle;
+    public TextView textViewX;
+    public TextView textViewY;
+    public TextView textViewSpeedL;
+    public TextView textViewSpeedR;
+    public TextView textViewServerState;
+ //   public TextView textData;
+    public EditText editTextFinishX;
+    public EditText editTextFinishY;
+    public EditText editTextStartX;
+    public EditText editTextStartY;
+    public EditText editTextDirection;
 
     //odometry info
     float passedWay;
+    float angle;
     float currentX;
     float currentY;
     float wheelSpeedLeft;
     float wheelSpeedRight;
-    float angle;
+
     String status;
 
     @Override
@@ -116,14 +120,20 @@ public class MainActivity extends Activity {
         ttsManager = new TTSManager();
         ttsManager.init(this);
 
-        path   = (TextView) findViewById(R.id.textViewPath);
-        X      = (TextView) findViewById(R.id.textViewX);
-        Y      = (TextView) findViewById(R.id.textViewY);
-        SpeedL = (TextView) findViewById(R.id.textViewSpeedL);
-        SpeedR = (TextView) findViewById(R.id.textViewSpeedR);
-        Angle  = (TextView) findViewById(R.id.textViewAngle);
+        textViewPath   = (TextView) findViewById(R.id.textViewPath);
+        textViewX      = (TextView) findViewById(R.id.textViewX);
+        textViewY      = (TextView) findViewById(R.id.textViewY);
+        textViewSpeedL = (TextView) findViewById(R.id.textViewSpeedL);
+        textViewSpeedR = (TextView) findViewById(R.id.textViewSpeedR);
+        textViewAngle  = (TextView) findViewById(R.id.textViewAngle);
     //    textData = (TextView) findViewById(R.id.textView16);
-        Status = (TextView) findViewById(R.id.textViewServerState);
+        textViewServerState = (TextView) findViewById(R.id.textViewServerState);
+
+        editTextFinishX = (EditText) findViewById(R.id.editTextFinishX);
+        editTextFinishY = (EditText) findViewById(R.id.editTextFinishY);
+        editTextStartX = (EditText) findViewById(R.id.editTextStartX);
+        editTextStartY = (EditText) findViewById(R.id.editTextStartY);
+        editTextDirection = (EditText) findViewById(R.id.editTextStartDirection);
 
         Button btnSetTask = (Button) findViewById(R.id.buttonSetTask);
         btnSetTask.setOnClickListener(new View.OnClickListener() {
@@ -134,9 +144,6 @@ public class MainActivity extends Activity {
                 } catch (ControllerException e) {}
             }
         });
-
-     //   editText1 = (EditText) findViewById(R.id.editText1);
-     //   editText2 = (EditText) findViewById(R.id.editText2);
 
   /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
         btnTextSpeech.setOnClickListener(new View.OnClickListener(){
@@ -152,18 +159,18 @@ public class MainActivity extends Activity {
             @Override
             public void onWheelStateRecieved(TwoWheelState twoWheelState) {
                 passedWay = twoWheelState.getOdometryInfo().getPath();
+                angle = twoWheelState.getOdometryInfo().getAngle();
                 currentX = (float) (-twoWheelState.getOdometryInfo().getX()+0.5*3+0.25);
                 currentY = (float) (-twoWheelState.getOdometryInfo().getY()+0.5+0.25);
                 wheelSpeedLeft = twoWheelState.getSpeed().getLWheelSpeed();
                 wheelSpeedRight = twoWheelState.getSpeed().getRWheelSpeed();
-                angle = twoWheelState.getOdometryInfo().getAngle();
 
-                path.setText(Float.toString(passedWay));
-                X.setText(Float.toString(currentX));
-                Y.setText(Float.toString(currentY));
-                SpeedL.setText(Float.toString(wheelSpeedLeft));
-                SpeedR.setText(Float.toString(wheelSpeedRight));
-                Angle.setText(Float.toString(angle));
+                textViewPath.setText(Float.toString(passedWay));
+                textViewAngle.setText(Float.toString(angle));
+                textViewX.setText(Float.toString(currentX));
+                textViewY.setText(Float.toString(currentY));
+                textViewSpeedL.setText(Float.toString(wheelSpeedLeft));
+                textViewSpeedR.setText(Float.toString(wheelSpeedRight));
             }
         };
         if( robot.isControllerAvailable( BodyController.class ) )
@@ -202,7 +209,7 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textData.setText(message); // просмотр строк сообщений
+                    //        textData.setText(message); // просмотр строк сообщений
                             String[] recievedMessage = message.split("/", 3);
                             //Прослушка с порта bt
                             if (hashString.equals(recievedMessage[0])) {
@@ -214,7 +221,7 @@ public class MainActivity extends Activity {
                                 navigation.setFinish(Y,X);
 
                                 status = "Connected";
-                                Status.setText(status);
+                    //            Status.setText(status);
                                 try {
                                     taskHandler.setTask();
                                 } catch (ControllerException e) {
@@ -223,7 +230,8 @@ public class MainActivity extends Activity {
                             }
                             else {
                                 status = recievedMessage[0]+"+"+recievedMessage[1]+"+"+recievedMessage[2];
-                                Status.setText(status);}
+                    //            Status.setText(status);
+                            }
                         }
                     });
                 }

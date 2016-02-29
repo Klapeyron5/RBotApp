@@ -5,8 +5,7 @@ import android.util.Log;
 import java.util.ArrayList;
 
 public class Navigation {
-    Navigation() {
-    }
+    Navigation() {}
     Navigation(TaskHandler t) {
         taskHandler = t;
     }
@@ -39,9 +38,9 @@ public class Navigation {
     int m = landscape.length; //длина карты
     int n = landscape[0].length; // высота карты
 
-    private int[] start = {5,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
+    private int[] start = {16,3}; // Начальная точка (координаты вводим наоборот из-за косяка с индексами)
     public int[] finish = {16,9}; // Конечная точка
-    int[] tick = start; // Текущая точка (изначально равна начальной)
+    int[] tick = new int[]{start[0],start[1]}; // Текущая точка (изначально равна начальной)
     int[][] neighbour = new int[4][3]; // Матрица координат (первые две строки) и значений эвристической функции (третья строка) четырех точек-соседей (столбец соответсвует номеру)
     int F; // Эвристическая функция
     int f;
@@ -113,6 +112,8 @@ public class Navigation {
                     path.add(2);
                     path.add(1);
             }
+        } else {
+            path.add(1);
         }
 
         for(int i=1;i<Direction.length;i++) {
@@ -141,6 +142,7 @@ public class Navigation {
 
     public void buildPath()
     {
+        tick = new int[]{start[0], start[1]};
         k = 0;
         //for (k=0;k<4;k++)
         while(true)
@@ -234,10 +236,14 @@ public class Navigation {
         System.out.println(i+"("+neighbour[i][0]+";"+neighbour[i][1]+")");*/
     }
 
+
+    public void setStart(int Y,int X) {
+        start = new int[] {Y,X};
+    }
+
     public void setFinish(int Y,int X) {
         finish = new int[] {Y,X};
     }
-
 
     public int[] getStart() {
         return start;

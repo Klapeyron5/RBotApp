@@ -41,7 +41,9 @@ public class MainActivity extends Activity {
 
     private ServerThread serverThread;
     private ClientThread clientThread;
+    private BluetoothAdapter bluetoothAdapter;
 
+    public static final int MY_BLUETOOTH_ENABLE_REQUEST_ID = 6;
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
     public static String hashString = "go";
 
@@ -74,6 +76,10 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
 
         initRobot();
         initConstructor();

@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
@@ -34,6 +36,8 @@ public class MainActivity extends Activity {
     public String robotConnectionState;
     public static final String OnConnectedRobotState = "connected";
 
+    public String clientConnectionState;
+
     MainActivity link = this;
     Robot robot;
     TaskHandler taskHandler;
@@ -55,7 +59,7 @@ public class MainActivity extends Activity {
     public TextView textViewSpeedL;
     public TextView textViewSpeedR;
     public TextView textViewServerState;
- //   public TextView textData;
+    public TextView textViewClientConnectionState;
     public EditText editTextFinishX;
     public EditText editTextFinishY;
     public EditText editTextStartX;
@@ -77,9 +81,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    /*    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
+        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);*/
 
         initRobot();
         initConstructor();
@@ -132,8 +136,8 @@ public class MainActivity extends Activity {
         textViewSpeedL = (TextView) findViewById(R.id.textViewSpeedL);
         textViewSpeedR = (TextView) findViewById(R.id.textViewSpeedR);
         textViewAngle  = (TextView) findViewById(R.id.textViewAngle);
-    //    textData = (TextView) findViewById(R.id.textView16);
         textViewServerState = (TextView) findViewById(R.id.textViewServerState);
+        textViewClientConnectionState = (TextView) findViewById(R.id.textViewClientConnectionState);
 
         editTextFinishX = (EditText) findViewById(R.id.editTextFinishX);
         editTextFinishY = (EditText) findViewById(R.id.editTextFinishY);
@@ -141,13 +145,34 @@ public class MainActivity extends Activity {
         editTextStartY = (EditText) findViewById(R.id.editTextStartY);
         editTextDirection = (EditText) findViewById(R.id.editTextStartDirection);
 
-        Button btnSetTask = (Button) findViewById(R.id.buttonSetTask);
-        btnSetTask.setOnClickListener(new View.OnClickListener() {
+        Button buttonSetTask = (Button) findViewById(R.id.buttonSetTask);
+        buttonSetTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
-                    taskHandler.setTask();
-                } catch (ControllerException e) {}
+                    int fY = Integer.parseInt(editTextFinishY.getText().toString());
+                    int fX = Integer.parseInt(editTextFinishX.getText().toString());
+                    int sY = Integer.parseInt(editTextStartY.getText().toString());
+                    int sX = Integer.parseInt(editTextStartX.getText().toString());
+                    int dir = Integer.parseInt(editTextDirection.getText().toString());
+                    taskHandler.setTask(sX, sY, fX, fY, dir);
+                } catch (ControllerException e) {
+                }
+            }
+        });
+
+        Button buttonStop = (Button) findViewById(R.id.buttonStop);
+        buttonStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            }
+        });
+
+        Button buttonBTOpen = (Button) findViewById(R.id.buttonBtOpen);
+        buttonBTOpen.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                makeDiscoverable(v);
             }
         });
 
@@ -215,24 +240,25 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                    //        textData.setText(message); // просмотр строк сообщений
+                            textViewClientConnectionState.setText(message); // просмотр строк сообщений
                             String[] recievedMessage = message.split("/", 3);
                             //Прослушка с порта bt
                             if (hashString.equals(recievedMessage[0])) {
-                                Navigation navigation = new Navigation();
-                                taskHandler = new TaskHandler(link);
 
-                                int X = Integer.parseInt(recievedMessage[1]);
-                                int Y = Integer.parseInt(recievedMessage[2]);
-                                navigation.setFinish(Y,X);
+                           /*     int fY = Integer.parseInt(recievedMessage[2]);
+                                int fX = Integer.parseInt(recievedMessage[1]);
+                                int sY = Integer.parseInt(editTextStartY.getText().toString());
+                                int sX = Integer.parseInt(editTextStartX.getText().toString());
+                                int dir = Integer.parseInt(editTextDirection.getText().toString());
+                                try {
+                                    taskHandler.setTask(sX,sY,fX,fY,dir);
+                                } catch (ControllerException e) {
+                                    e.printStackTrace();
+                                }*/
 
+                                Log.i(TAG,"--------------------------->>>>>>>>>>>>>>>>>>");
                                 status = "Connected";
                     //            Status.setText(status);
-                                try {
-                                    taskHandler.setTask();
-                                } catch (ControllerException e) {
-                                }
-
                             }
                             else {
                                 status = recievedMessage[0]+"+"+recievedMessage[1]+"+"+recievedMessage[2];

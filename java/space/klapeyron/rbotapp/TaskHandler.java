@@ -1,6 +1,7 @@
 package space.klapeyron.rbotapp;
 
 import android.util.Log;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -27,15 +28,9 @@ public class TaskHandler {
         navigation = new Navigation(this);
     }
 
-    public void setTask() throws ControllerException {
-
-        int fY = Integer.parseInt(mainActivity.editTextFinishY.getText().toString());
-        int fX = Integer.parseInt(mainActivity.editTextFinishX.getText().toString());
-        int sY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());
-        int sX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
-        int dir = Integer.parseInt(mainActivity.editTextDirection.getText().toString());
+    public void setTask(int sX, int sY, int fX, int fY, int dir) throws ControllerException {
         currentDirection = dir;
-        navigation.setStart(sY, sX);
+        navigation.setStart(sY,sX);
         navigation.setFinish(fY,fX);
 
         Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
@@ -90,7 +85,23 @@ public class TaskHandler {
                         break;
                 }
             }
-            navigation.setStart(navigation.finish[0],navigation.finish[1]);
+
+            navigation.setStart(navigation.finish[0], navigation.finish[1]);
+         //   mainActivity.editTextStartX.setText(navigation.finish[1]);
+         //   mainActivity.editTextStartY.setText(navigation.finish[0]);
+         //   mainActivity.editTextDirection.setText(Integer.toString(currentDirection));
+
+            synchronized (this) {
+                mainActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainActivity.editTextStartX.setText(Integer.toString(navigation.finish[1]));
+                        mainActivity.editTextStartY.setText(Integer.toString(navigation.finish[0]));
+                        mainActivity.editTextDirection.setText(Integer.toString(currentDirection));
+                    }
+                });
+            }
+
             Log.i(MainActivity.TAG, "setTask finish passedWay " + mainActivity.passedWay);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.passedWay-startPath));
         }

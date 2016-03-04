@@ -222,6 +222,8 @@ public class MainActivity extends Activity {
                             int dir = Integer.parseInt(editTextDirection.getText().toString());
                             Log.i(MainActivity.TAG,"finish X: "+fX);
                             Log.i(MainActivity.TAG,"finish Y: "+fY);
+                            editTextFinishX.setText(recievedMessage[1]);
+                            editTextFinishY.setText(recievedMessage[2]);
                             try {
                                 taskHandler.setTask(sX, sY, fX, fY, dir);
                             } catch (ControllerException e) {

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,14 +11,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.listeners.TwoWheelBodyControllerStateListener;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
-import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 import ru.rbot.android.bridge.service.robotcontroll.robots.listeners.RobotStateListener;
 import space.klapeyron.rbotapp.BluetoothClientConnection.ClientThread;
 import space.klapeyron.rbotapp.BluetoothClientConnection.Communicator;
@@ -38,18 +34,21 @@ public class MainActivity extends Activity {
 
     public String clientConnectionState;
 
-    MainActivity link = this;
-    Robot robot;
-    TaskHandler taskHandler;
-    TTSManager ttsManager = null;
 
-    private ServerThread serverThread;
-    private ClientThread clientThread;
-    private BluetoothAdapter bluetoothAdapter;
 
     public static final int MY_BLUETOOTH_ENABLE_REQUEST_ID = 6;
     public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
     public static String hashString = "go";
+    private ServerThread serverThread;
+    private ClientThread clientThread;
+    private BluetoothAdapter bluetoothAdapter;
+
+    ru.rbot.android.bridge.service.robotcontroll.robots.Robot robot;
+
+    MainActivity link = this;
+    TaskHandler taskHandler;
+    TTSManager ttsManager = null;
+
 
     //customizing server interface
     public TextView textViewPath;
@@ -74,21 +73,18 @@ public class MainActivity extends Activity {
     float wheelSpeedLeft;
     float wheelSpeedRight;
 
-    String status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-    /*    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);*/
-
-        initRobot();
         initConstructor();
+        initRobot();
 
-        serverState = LoadedServerState;
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
     }
 
     @Override
@@ -105,19 +101,19 @@ public class MainActivity extends Activity {
         final RobotStateListener robotStateListener = new RobotStateListener() {
             @Override
             public void onRobotReady() {
+                Log.i(MainActivity.TAG, "onRobotReady1");
                 odometryMethod();
-                Log.i(TAG, "onRobotReady");
-                robotConnectionState = OnConnectedRobotState;
+                Log.i(MainActivity.TAG, "onRobotReady2");
             }
 
             @Override
             public void onRobotInitError() {
-                Log.i(TAG, "onRobotInitError");
+                Log.i(MainActivity.TAG, "onRobotInitError");
             }
 
             @Override
             public void onRobotDisconnect() {
-                Log.i(TAG, "onRobotDisconnect");
+                Log.i(MainActivity.TAG, "onRobotDisconnect");
             }
         };
 
@@ -126,16 +122,12 @@ public class MainActivity extends Activity {
     }
 
     private void initConstructor() {
-        /*tts*/
-        ttsManager = new TTSManager();
-        ttsManager.init(this);
-
-        textViewPath   = (TextView) findViewById(R.id.textViewPath);
-        textViewX      = (TextView) findViewById(R.id.textViewX);
-        textViewY      = (TextView) findViewById(R.id.textViewY);
+        textViewPath = (TextView) findViewById(R.id.textViewPath);
+        textViewX = (TextView) findViewById(R.id.textViewX);
+        textViewY = (TextView) findViewById(R.id.textViewY);
         textViewSpeedL = (TextView) findViewById(R.id.textViewSpeedL);
         textViewSpeedR = (TextView) findViewById(R.id.textViewSpeedR);
-        textViewAngle  = (TextView) findViewById(R.id.textViewAngle);
+        textViewAngle = (TextView) findViewById(R.id.textViewAngle);
         textViewServerState = (TextView) findViewById(R.id.textViewServerState);
         textViewClientConnectionState = (TextView) findViewById(R.id.textViewClientConnectionState);
 
@@ -175,14 +167,6 @@ public class MainActivity extends Activity {
                 makeDiscoverable(v);
             }
         });
-
-  /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
-        btnTextSpeech.setOnClickListener(new View.OnClickListener(){
-            @Override
-        public void onClick(View v){
-                ttsManager.Greeting();
-            }
-        });*/
     }
 
     private void odometryMethod() {
@@ -219,19 +203,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    //Bluetooth needed things:
-   private class WriteTask extends AsyncTask<String, Void, Void> {
-        protected Void doInBackground(String... args) {
-            try {
-                clientThread.getCommunicator().write(args[0]);
-            } catch (Exception e) {
-                Log.d("MainActivity", e.getClass().getSimpleName() + " " + e.getLocalizedMessage());
-            }
-            return null;
-        }
-    }
-
-   private final CommunicatorService communicatorService = new CommunicatorService() {
+    private final CommunicatorService communicatorService = new CommunicatorService() {
         @Override
         public Communicator createCommunicatorThread(BluetoothSocket socket) {
             return new CommunicatorImpl(socket, new CommunicatorImpl.CommunicationListener() {
@@ -242,27 +214,18 @@ public class MainActivity extends Activity {
                         public void run() {
                             textViewClientConnectionState.setText(message); // просмотр строк сообщений
                             String[] recievedMessage = message.split("/", 3);
-                            //Прослушка с порта bt
-                            if (hashString.equals(recievedMessage[0])) {
-
-                           /*     int fY = Integer.parseInt(recievedMessage[2]);
-                                int fX = Integer.parseInt(recievedMessage[1]);
-                                int sY = Integer.parseInt(editTextStartY.getText().toString());
-                                int sX = Integer.parseInt(editTextStartX.getText().toString());
-                                int dir = Integer.parseInt(editTextDirection.getText().toString());
-                                try {
-                                    taskHandler.setTask(sX,sY,fX,fY,dir);
-                                } catch (ControllerException e) {
-                                    e.printStackTrace();
-                                }*/
-
-                                Log.i(TAG,"--------------------------->>>>>>>>>>>>>>>>>>");
-                                status = "Connected";
-                    //            Status.setText(status);
-                            }
-                            else {
-                                status = recievedMessage[0]+"+"+recievedMessage[1]+"+"+recievedMessage[2];
-                    //            Status.setText(status);
+                            Log.i(MainActivity.TAG,"Message:  "+recievedMessage[0]+" "+recievedMessage[1]+" "+recievedMessage[2]);
+                            int fX = Integer.parseInt(recievedMessage[1]);
+                            int fY = Integer.parseInt(recievedMessage[2]);
+                            int sX = Integer.parseInt(editTextStartX.getText().toString());
+                            int sY = Integer.parseInt(editTextStartY.getText().toString());
+                            int dir = Integer.parseInt(editTextDirection.getText().toString());
+                            Log.i(MainActivity.TAG,"finish X: "+fX);
+                            Log.i(MainActivity.TAG,"finish Y: "+fY);
+                            try {
+                                taskHandler.setTask(sX, sY, fX, fY, dir);
+                            } catch (ControllerException e) {
+                                e.printStackTrace();
                             }
                         }
                     });
@@ -278,6 +241,19 @@ public class MainActivity extends Activity {
         startActivity(i);
     }
 
+
+
+
+
+
+
+  /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
+        btnTextSpeech.setOnClickListener(new View.OnClickListener(){
+            @Override
+        public void onClick(View v){
+                ttsManager.Greeting();
+            }
+        });*/
     /*@Override
     public void onPause() {
         super.onPause();

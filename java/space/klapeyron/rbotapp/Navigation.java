@@ -88,7 +88,7 @@ public class Navigation {
       //      System.out.println(Direction[i]);
 
 
-        //TODO //correct start angle
+        //TODO //correct start odometryAngle
         path.clear();
         if (taskHandler.currentDirection != Direction[0]) {
             int currDir = taskHandler.currentDirection;

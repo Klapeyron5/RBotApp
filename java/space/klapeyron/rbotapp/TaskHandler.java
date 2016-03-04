@@ -51,8 +51,8 @@ public class TaskHandler {
     class TaskThread extends Thread {
         @Override
         public void run() {
-            float startPath = mainActivity.passedWay;
-            Log.i(MainActivity.TAG, "setTask start passedWay "+startPath);
+            float startPath = mainActivity.odometryPath;
+            Log.i(MainActivity.TAG, "setTask start odometryPath "+startPath);
 
             int straightLineCoeff = 0;
             for(int i=0;i<path.size();i++) {
@@ -86,9 +86,6 @@ public class TaskHandler {
             }
 
             navigation.setStart(navigation.finish[0], navigation.finish[1]);
-         //   mainActivity.editTextStartX.setText(navigation.finish[1]);
-         //   mainActivity.editTextStartY.setText(navigation.finish[0]);
-         //   mainActivity.editTextDirection.setText(Integer.toString(currentDirection));
 
             synchronized (this) {
                 mainActivity.runOnUiThread(new Runnable() {
@@ -101,8 +98,8 @@ public class TaskHandler {
                 });
             }
 
-            Log.i(MainActivity.TAG, "setTask finish passedWay " + mainActivity.passedWay);
-            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.passedWay-startPath));
+            Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.odometryPath);
+            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.odometryPath -startPath));
         }
     }
 
@@ -152,7 +149,7 @@ public class TaskHandler {
         private float startPath;
 
         StartingForwardThread() {
-            startPath = mainActivity.passedWay;
+            startPath = mainActivity.odometryPath;
         }
 
         @Override
@@ -198,7 +195,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.passedWay - startPath < TaskHandler.forwardDistance)) {
+                    if(!(mainActivity.odometryPath - startPath < TaskHandler.forwardDistance)) {
                         stopFlag = true;
                         return;
                     }
@@ -214,7 +211,7 @@ public class TaskHandler {
         private float startPath;
 
         ForwardThreadForSingleDistance() {
-            startPath = mainActivity.passedWay;
+            startPath = mainActivity.odometryPath;
         }
 
         @Override
@@ -260,7 +257,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.passedWay - startPath < TaskHandler.forwardDistance)) {
+                    if(!(mainActivity.odometryPath - startPath < TaskHandler.forwardDistance)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
@@ -282,18 +279,18 @@ public class TaskHandler {
         private float correctionDistance = 0.01f;
         private float constAngle = 0;//(float)-Math.PI; //TODO
         private TwoWheelsBodyController wheelsController = null;
-        private float dtAngle = mainActivity.angle; //angle with the last iteration (for derivative counting)
+        private float dtAngle = mainActivity.odometryAngle; //odometryAngle with the last iteration (for derivative counting)
         private float corrSpeedLeft = 0;
         private float corrSpeedRight = 0;
 
         ForwardThread(int straightLineCoeff) {
-            startPath = mainActivity.passedWay;
+            startPath = mainActivity.odometryPath;
             purposePath = straightLineCoeff * TaskHandler.forwardDistance;
         }
 
         @Override
         public void run() {
-        //    constAngle = mainActivity.angle;
+        //    constAngle = mainActivity.odometryAngle;
             switch(currentDirection) {
                 case 0:
                     constAngle = 0;
@@ -318,7 +315,7 @@ public class TaskHandler {
                     {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
-                        dtAngle = mainActivity.angle;
+                        dtAngle = mainActivity.odometryAngle;
                         corrSpeedLeft = 0;
                         corrSpeedRight = 0;
                         while(true) {
@@ -340,14 +337,14 @@ public class TaskHandler {
             switch(currentDirection) {
                 case 0:
                     Log.i(MainActivity.TAG, "\"_________________case0_________________\"");
-                    Log.i(MainActivity.TAG,"angle: "+mainActivity.angle);
-                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                    Log.i(MainActivity.TAG,"odometryAngle: "+mainActivity.odometryAngle);
+                    if (Math.abs(mainActivity.odometryAngle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(MainActivity.TAG,"OK");
                     } else
-                        if (!(mainActivity.angle > correctionDistance)) {
-                            Log.i(MainActivity.TAG, "LEFT "+ mainActivity.angle);
-                            if (-mainActivity.angle + dtAngle > 0) {
+                        if (!(mainActivity.odometryAngle > correctionDistance)) {
+                            Log.i(MainActivity.TAG, "LEFT "+ mainActivity.odometryAngle);
+                            if (-mainActivity.odometryAngle + dtAngle > 0) {
                                 corrSpeedLeft += correctionSpeedCorrection;
                                 Log.i(MainActivity.TAG, "derivative > 0");
                             } else {
@@ -356,34 +353,34 @@ public class TaskHandler {
                                 Log.i(MainActivity.TAG, "derivative < 0");
                             }
                             wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                            dtAngle = mainActivity.angle;
+                            dtAngle = mainActivity.odometryAngle;
                         } else {
-                            Log.i(MainActivity.TAG, "RIGHT "+mainActivity.angle);
-                            if (-dtAngle + mainActivity.angle > 0) {
+                            Log.i(MainActivity.TAG, "RIGHT "+mainActivity.odometryAngle);
+                            if (-dtAngle + mainActivity.odometryAngle > 0) {
                                 corrSpeedRight += correctionSpeedCorrection;
                                 Log.i(MainActivity.TAG, "derivative > 0");
                             } else {
-                                if (corrSpeedLeft != 0)
+                                if (corrSpeedRight != 0)
                                     corrSpeedRight -= correctionSpeedCorrection;
                                 Log.i(MainActivity.TAG, "derivative < 0");
                             }
                             wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                            dtAngle = mainActivity.angle;
+                            dtAngle = mainActivity.odometryAngle;
                         }
                     break;
                 case 1:
                     Log.i(MainActivity.TAG, "\"__________________case1__________________\"");
-                    Log.i(MainActivity.TAG,"angle: "+mainActivity.angle);
-                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                    Log.i(MainActivity.TAG,"odometryAngle: "+mainActivity.odometryAngle);
+                    if (Math.abs(mainActivity.odometryAngle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(MainActivity.TAG,"OK");
                     }
                     else
-                    if (!(mainActivity.angle - constAngle > correctionDistance)) {
-                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.angle);
+                    if (!(mainActivity.odometryAngle - constAngle > correctionDistance)) {
+                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.odometryAngle);
 
                         //correction depending on derivation started
-                        if (-mainActivity.angle + dtAngle > 0) {
+                        if (-mainActivity.odometryAngle + dtAngle > 0) {
                             corrSpeedLeft += correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative > 0");
                         }
@@ -395,36 +392,36 @@ public class TaskHandler {
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = mainActivity.odometryAngle;
                     } else {
-                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.angle);
+                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.odometryAngle);
 
                         //correction depending on derivation started
-                        if (-dtAngle + mainActivity.angle > 0) {
+                        if (-dtAngle + mainActivity.odometryAngle > 0) {
                             corrSpeedRight += correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative > 0");
                         } else {
-                            if (corrSpeedLeft != 0)
+                            if (corrSpeedRight != 0)
                                 corrSpeedRight -= correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative < 0");
                         }
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = mainActivity.odometryAngle;
                     }
                     break;
                 case 2:
                     Log.i(MainActivity.TAG, "\"__________________case2__________________\"");
-                    Log.i(MainActivity.TAG,"angle: "+mainActivity.angle);
-                    float mAangel = anglePlus2PI(mainActivity.angle); //mainActivity.angle
+                    Log.i(MainActivity.TAG,"odometryAngle: "+mainActivity.odometryAngle);
+                    float mAangel = anglePlus2PI(mainActivity.odometryAngle); //mainActivity.odometryAngle
                     if (Math.abs(mAangel - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(MainActivity.TAG,"OK");
                     }
                     else
                     if (constAngle - mAangel > correctionDistance) {
-                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.angle);
+                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.odometryAngle);
 
                         //correction depending on derivation started
                         if (mAangel - dtAngle > 0) {
@@ -439,38 +436,38 @@ public class TaskHandler {
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                        dtAngle = anglePlus2PI(mainActivity.angle);
+                        dtAngle = anglePlus2PI(mainActivity.odometryAngle);
                     } else {
-                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.angle);
+                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.odometryAngle);
 
                         //correction depending on derivation started
                         if (dtAngle - mAangel > 0) {
                             corrSpeedRight += correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative > 0");
                         } else {
-                            if (corrSpeedLeft != 0)
+                            if (corrSpeedRight != 0)
                                 corrSpeedRight -= correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative < 0");
                         }
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                        dtAngle = anglePlus2PI(mainActivity.angle);
+                        dtAngle = anglePlus2PI(mainActivity.odometryAngle);
                     }
                     break;
                 case 3:
                     Log.i(MainActivity.TAG, "\"__________________case3__________________\"");
-                    Log.i(MainActivity.TAG,"angle: "+mainActivity.angle);
-                    if (Math.abs(mainActivity.angle - constAngle) < correctionDistance) {
+                    Log.i(MainActivity.TAG,"odometryAngle: "+mainActivity.odometryAngle);
+                    if (Math.abs(mainActivity.odometryAngle - constAngle) < correctionDistance) {
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed);
                         Log.i(MainActivity.TAG,"OK");
                     }
                     else
-                    if (!(mainActivity.angle - constAngle > correctionDistance)) {
-                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.angle);
+                    if (!(mainActivity.odometryAngle - constAngle > correctionDistance)) {
+                        Log.i(MainActivity.TAG, "LEFT "+ mainActivity.odometryAngle);
 
                         //correction depending on derivation started
-                        if (dtAngle - mainActivity.angle > 0) {
+                        if (dtAngle - mainActivity.odometryAngle > 0) {
                             corrSpeedLeft += correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative > 0");
                         } else {
@@ -481,23 +478,23 @@ public class TaskHandler {
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed, standardSpeed + correctionSpeed + corrSpeedLeft);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = mainActivity.odometryAngle;
                     } else {
-                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.angle);
+                        Log.i(MainActivity.TAG, "RIGHT "+mainActivity.odometryAngle);
 
                         //correction depending on derivation started
-                        if (mainActivity.angle - dtAngle > 0) {
+                        if (mainActivity.odometryAngle - dtAngle > 0) {
                             corrSpeedRight += correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative > 0");
                         } else {
-                            if (corrSpeedLeft != 0)
+                            if (corrSpeedRight != 0)
                                 corrSpeedRight -= correctionSpeedCorrection;
                             Log.i(MainActivity.TAG, "derivative < 0");
                         }
                         //correction depending on derivation finished
 
                         wheelsController.setWheelsSpeeds(standardSpeed + correctionSpeed + corrSpeedRight, standardSpeed);
-                        dtAngle = mainActivity.angle;
+                        dtAngle = mainActivity.odometryAngle;
                     }
                     break;
             }
@@ -521,7 +518,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.passedWay - startPath < purposePath)) {
+                    if(!(mainActivity.odometryPath - startPath < purposePath)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
@@ -539,7 +536,7 @@ public class TaskHandler {
         private float purposeAngle;
 
         LeftThread() {
-            startAngle = mainActivity.angle;
+            startAngle = mainActivity.odometryAngle;
             purposeAngle = (float) Math.PI / 2;
         }
 
@@ -550,26 +547,29 @@ public class TaskHandler {
             int flagVariant;
             if ((startAngle >= 0) && (startAngle < Math.PI / 2)) {
                 flagVariant = 1;
-                Log.i(MainActivity.TAG, "1");
+                Log.i(MainActivity.TAG, "flag 1");
             } else if (startAngle >= Math.PI / 2) {
                 flagVariant = 2;
-                Log.i(MainActivity.TAG, "2");
+                Log.i(MainActivity.TAG, "flag 2");
             } else if (startAngle < -Math.PI / 2) {
                 flagVariant = 3;
-                Log.i(MainActivity.TAG, "3");
+                Log.i(MainActivity.TAG, "flag 3");
             } else {
                 flagVariant = 4;
-                Log.i(MainActivity.TAG, "4");
+                Log.i(MainActivity.TAG, "flag 4");
             }
 
             if (robot.isControllerAvailable(BodyController.class)) {
+                Log.i(MainActivity.TAG,"BodyController available");
                 BodyController bodyController = null;
                 try {
                     bodyController = (BodyController) robot.getController(BodyController.class);
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                        Log.i(MainActivity.TAG,"TwoWheelsBodyController available");
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
                         wheelsController.turnAround(10f, (float) Math.PI / 2);
+                        Log.i(MainActivity.TAG, "turnAround");
                         while (true) {
                             if (new FlagVariant(flagVariant).getFlag()) {
                             } else {
@@ -595,10 +595,13 @@ public class TaskHandler {
             }
 
             public boolean getFlag() {
-                float currentAngle = mainActivity.angle;
+                float currentAngle = mainActivity.odometryAngle;
                 switch (this.variant) {
                     case 1:
-                        return ((currentAngle - startAngle) < purposeAngle);
+                        if (currentAngle > 0)
+                            return ((currentAngle - startAngle) < purposeAngle);
+                        else
+                            return false;
                     case 2:
                         if (currentAngle < 0)
                             currentAngle += 2 * Math.PI;
@@ -613,7 +616,7 @@ public class TaskHandler {
             }
 
             public float getDimension() {
-                float currentAngle = mainActivity.angle;
+                float currentAngle = mainActivity.odometryAngle;
                 switch (this.variant) {
                     case 1:
                         return (currentAngle - startAngle);
@@ -637,8 +640,8 @@ public class TaskHandler {
         private float purposeAngle;
 
         RightThread() {
-            startAngle = mainActivity.angle;
-            purposeAngle = (float) -Math.PI / 2;
+            startAngle = mainActivity.odometryAngle;
+            purposeAngle = (float) Math.PI / 2;
         }
 
         @Override
@@ -648,29 +651,33 @@ public class TaskHandler {
             int flagVariant;
             if ((startAngle <= 0) && (startAngle > -Math.PI / 2)) {
                 flagVariant = 1;
-                Log.i(MainActivity.TAG, "1");
+                Log.i(MainActivity.TAG, "flag 1");
             } else if (startAngle <= -Math.PI / 2) {
                 flagVariant = 2;
-                Log.i(MainActivity.TAG, "2");
+                Log.i(MainActivity.TAG, "flag 2");
             } else if (startAngle > Math.PI / 2) {
                 flagVariant = 3;
-                Log.i(MainActivity.TAG, "3");
+                Log.i(MainActivity.TAG, "flag 3");
             } else {
                 flagVariant = 4;
-                Log.i(MainActivity.TAG, "4");
+                Log.i(MainActivity.TAG, "flag 4");
             }
 
             if (robot.isControllerAvailable(BodyController.class)) {
+                Log.i(MainActivity.TAG,"BodyController available");
                 BodyController bodyController = null;
                 try {
                     bodyController = (BodyController) robot.getController(BodyController.class);
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                        Log.i(MainActivity.TAG,"TwoWheelsBodyController available");
                         TwoWheelsBodyController wheelsController = null;
                         wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
                         wheelsController.turnAround(10f,(float)-Math.PI/2);
+                        Log.i(MainActivity.TAG, "turnAround");
                         while (true) {
                             if (new FlagVariant(flagVariant).getFlag()) {
                             } else {
+                                Log.i(MainActivity.TAG,"STOP");
                                 wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                                 try {
                                     sleep(200);
@@ -693,25 +700,28 @@ public class TaskHandler {
             }
 
             public boolean getFlag() {
-                float currentAngle = mainActivity.angle;
+                float currentAngle = mainActivity.odometryAngle;
                 switch (this.variant) {
                     case 1:
-                        return ((currentAngle - startAngle) > purposeAngle);
+                        if(currentAngle < 0)
+                            return ((startAngle - currentAngle) < purposeAngle);
+                        else
+                            return false;
                     case 2:
                         if (currentAngle > 0)
                             currentAngle -= 2 * Math.PI;
-                        return ((currentAngle - startAngle) > purposeAngle);
+                        return ((startAngle - currentAngle) < purposeAngle);
                     case 3:
-                        return ((currentAngle - startAngle) > purposeAngle);
+                        return ((startAngle - currentAngle) < purposeAngle);
                     case 4:
-                        return ((currentAngle - startAngle) > purposeAngle);
+                        return ((startAngle - currentAngle) < purposeAngle);
                     default:
                         return true;
                 }
             }
 
             public float getDimension() {
-                float currentAngle = mainActivity.angle;
+                float currentAngle = mainActivity.odometryAngle;
                 switch (this.variant) {
                     case 1:
                         return Math.abs(currentAngle - startAngle);

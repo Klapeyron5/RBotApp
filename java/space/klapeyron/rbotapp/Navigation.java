@@ -90,8 +90,8 @@ public class Navigation {
 
         //TODO //correct start odometryAngle
         path.clear();
-        if (taskHandler.currentDirection != Direction[0]) {
-            int currDir = taskHandler.currentDirection;
+        if (taskHandler.robotWrap.currentDirection != Direction[0]) {
+            int currDir = taskHandler.robotWrap.currentDirection;
             if     (((currDir == 0) && (Direction[0] == 1)) ||
                     ((currDir == 1) && (Direction[0] == 2)) ||
                     ((currDir == 2) && (Direction[0] == 3)) ||

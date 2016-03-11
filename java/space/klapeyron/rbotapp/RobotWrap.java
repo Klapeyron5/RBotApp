@@ -1,6 +1,5 @@
 package space.klapeyron.rbotapp;
 
-import android.content.Context;
 import android.util.Log;
 
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
@@ -8,21 +7,26 @@ import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBo
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.data.TwoWheelState;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.listeners.TwoWheelBodyControllerStateListener;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
+import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 import ru.rbot.android.bridge.service.robotcontroll.robots.listeners.RobotStateListener;
 
-
-public class RobotWrap extends ru.rbot.android.bridge.service.robotcontroll.robots.Robot {
+public class RobotWrap {
     //Robot states list:
     public String ROBOT_STATE;
     private static final String ROBOT_CONNECTED = "connected";
     private static final String ROBOT_INIT_ERROR = "init error";
     private static final String ROBOT_DISCONNECTED = "disconnected";
 
+    public Robot robot;
     private MainActivity mainActivity;
+
+    //current coordinates
+    public int currentX;
+    public int currentY;
 
     //counted odometry info
     float countedPath;
-    public int currentDirection;
+    public int currentDirection; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
 
     //primary odometry info
     float odometryPath;
@@ -67,26 +71,33 @@ public class RobotWrap extends ru.rbot.android.bridge.service.robotcontroll.robo
         }
     };
 
-    public RobotWrap(Context pContext) {
-        super(pContext);
-        mainActivity = (MainActivity) pContext;
-        setRobotStateListener(robotStateListener);
-        start();
+    public RobotWrap(MainActivity m) {
+        robot = new Robot(m);
+        mainActivity = m;
+        robot.setRobotStateListener(robotStateListener);
+        robot.start();
     }
 
-    @Override
-    public void setRobotStateListener(RobotStateListener pOnRobotReadyListener) {
-        super.setRobotStateListener(pOnRobotReadyListener);
+    public void setStartCoordinatesByServerEditText() {
+        currentX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
+        currentY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());
+        currentDirection = Integer.parseInt(mainActivity.editTextDirection.getText().toString());
     }
 
-    public void setReadingOdometry() {
+    public void reconnect() {
+        robot = new Robot(mainActivity);
+        robot.setRobotStateListener(robotStateListener);
+        robot.start();
+    }
+
+    private void setReadingOdometry() {
         TwoWheelBodyControllerStateListener twoWheelBodyControllerStateListener = new TwoWheelBodyControllerStateListener() {
             @Override
             public void onWheelStateRecieved(TwoWheelState twoWheelState) {
                 odometryPath = twoWheelState.getOdometryInfo().getPath();
                 odometryAngle = twoWheelState.getOdometryInfo().getAngle();
-                odometryAbsoluteX = (float) (-twoWheelState.getOdometryInfo().getX()+0.5*3+0.25);
-                odometryAbsoluteY = (float) (-twoWheelState.getOdometryInfo().getY()+0.5+0.25);
+                odometryAbsoluteX = (float) (-twoWheelState.getOdometryInfo().getX() + 0.5 * 3 + 0.25);
+                odometryAbsoluteY = (float) (-twoWheelState.getOdometryInfo().getY() + 0.5 + 0.25);
                 odometryWheelSpeedLeft = twoWheelState.getSpeed().getLWheelSpeed();
                 odometryWheelSpeedRight = twoWheelState.getSpeed().getRWheelSpeed();
 
@@ -100,14 +111,12 @@ public class RobotWrap extends ru.rbot.android.bridge.service.robotcontroll.robo
                 mainActivity.textViewOdometrySpeedR.setText(Float.toString(odometryWheelSpeedRight));
             }
         };
-        if( this.isControllerAvailable( BodyController.class ) )
-        {
+        if (robot.isControllerAvailable(BodyController.class)) {
             try {
-                BodyController bodyController = (BodyController) this.getController( BodyController.class );
-                if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                {
-                    TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
-                    wheelsController.setListener(twoWheelBodyControllerStateListener,100);
+                BodyController bodyController = (BodyController) robot.getController(BodyController.class);
+                if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                    TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                    wheelsController.setListener(twoWheelBodyControllerStateListener, 100);
                 }
             } catch (ControllerException e) {
                 e.printStackTrace();

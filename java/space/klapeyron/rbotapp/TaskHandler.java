@@ -7,29 +7,28 @@ import java.util.ArrayList;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
-import ru.rbot.android.bridge.service.robotcontroll.robots.Robot;
 
 
 public class TaskHandler {
     private MainActivity mainActivity;
-    private Robot robot;
+    public RobotWrap robotWrap;
     private Navigation navigation;
-    public int currentDirection = 1; //0: positive direction on X; 1: positive dir on Y; 2: negative on X; 3: negative on Y;
+    public Thread runningThread;
 
-    private final static float forwardDistance = 0.5f;
+    private final static float FORWARD_DISTANCE = 0.5f;
 
     private int[] arrayPath = {1,1,2,1,1,0,1};
     private ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
     TaskHandler(MainActivity m) {
         mainActivity = m;
-        robot = mainActivity.robotWrap;
+        robotWrap = mainActivity.robotWrap;
         navigation = new Navigation(this);
     }
 
-    public void setTask(int sX, int sY, int fX, int fY, int dir) throws ControllerException {
-        currentDirection = dir;
-        navigation.setStart(sY,sX);
+    public void setTask(int fX, int fY) throws ControllerException {
+        robotWrap.setStartCoordinatesByServerEditText();
+        navigation.setStart(robotWrap.currentY,robotWrap.currentX);
         navigation.setFinish(fY,fX);
 
         Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
@@ -58,11 +57,19 @@ public class TaskHandler {
             for(int i=0;i<path.size();i++) {
                 switch(path.get(i)) {
                     case 0:
-                        if(currentDirection!=3)
-                            currentDirection++;
+                        if(robotWrap.currentDirection!=3)
+                            robotWrap.currentDirection++;
                         else
-                            currentDirection = 0;
+                            robotWrap.currentDirection = 0;
                         turnRight();
+                        synchronized (this) {
+                            mainActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
+                                }
+                            });
+                        }
                         break;
                     case 1:
                         straightLineCoeff++;
@@ -76,28 +83,23 @@ public class TaskHandler {
                             }
                         break;
                     case 2:
-                        if(currentDirection!=0)
-                            currentDirection--;
+                        if(robotWrap.currentDirection!=0)
+                            robotWrap.currentDirection--;
                         else
-                            currentDirection = 3;
+                            robotWrap.currentDirection = 3;
+                        synchronized (this) {
+                            mainActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
+                                }
+                            });
+                        }
                         turnLeft();
                         break;
                 }
             }
-
-            navigation.setStart(navigation.finish[0], navigation.finish[1]);
-
-            synchronized (this) {
-                mainActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainActivity.editTextStartX.setText(Integer.toString(navigation.finish[1]));
-                        mainActivity.editTextStartY.setText(Integer.toString(navigation.finish[0]));
-                        mainActivity.editTextDirection.setText(Integer.toString(currentDirection));
-                    }
-                });
-            }
-
+       //     navigation.setStart(navigation.finish[0], navigation.finish[1]);
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath -startPath));
         }
@@ -106,7 +108,7 @@ public class TaskHandler {
     private void distanceForward(int straightLineCoeff) {
     /*    if (straightLineCoeff == 1) {
             ForwardThreadForSingleDistance forwardThreadForSingleDistance = new ForwardThreadForSingleDistance();
-            forwardThreadForSingleDistance.start(); //acceleration on first forwardDistance
+            forwardThreadForSingleDistance.start(); //acceleration on first FORWARD_DISTANCE
             try {
                 forwardThreadForSingleDistance.join();
             } catch (InterruptedException e) {}
@@ -114,13 +116,14 @@ public class TaskHandler {
         } else {
 
             StartingForwardThread startingForwardThread = new StartingForwardThread();
-            startingForwardThread.start(); //acceleration on first forwardDistance
+            startingForwardThread.start(); //acceleration on first FORWARD_DISTANCE
             try {
                 startingForwardThread.join();
             } catch (InterruptedException e) {}
             straightLineCoeff--;*/
             if (straightLineCoeff > 0) {
                 ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
+                runningThread = forwardThread;
                 forwardThread.start();
                 try {
                     forwardThread.join();
@@ -131,6 +134,7 @@ public class TaskHandler {
 
     private void turnLeft() {
         LeftThread leftThread = new LeftThread();
+        runningThread = leftThread;
         leftThread.start();
         try {
             leftThread.join();
@@ -139,6 +143,7 @@ public class TaskHandler {
 
     private void turnRight() {
         RightThread rightThread = new RightThread();
+        runningThread = rightThread;
         rightThread.start();
         try {
             rightThread.join();
@@ -155,11 +160,11 @@ public class TaskHandler {
         @Override
         public void run() {
             Log.i(MainActivity.TAG, "StartingForwardThread started");
-            if( robot.isControllerAvailable( BodyController.class ) )
+            if( robotWrap.robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
                 try {
-                    bodyController = (BodyController) robot.getController( BodyController.class );
+                    bodyController = (BodyController) robotWrap.robot.getController( BodyController.class );
                     if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                     {
                         TwoWheelsBodyController wheelsController = null;
@@ -195,7 +200,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.forwardDistance)) {
+                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.FORWARD_DISTANCE)) {
                         stopFlag = true;
                         return;
                     }
@@ -217,11 +222,11 @@ public class TaskHandler {
         @Override
         public void run() {
             Log.i(MainActivity.TAG,"ForwardThreadForSingleDistance started");
-            if( robot.isControllerAvailable( BodyController.class ) )
+            if( robotWrap.robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
                 try {
-                    bodyController = (BodyController) robot.getController( BodyController.class );
+                    bodyController = (BodyController) robotWrap.robot.getController( BodyController.class );
                     if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                     {
                         TwoWheelsBodyController wheelsController = null;
@@ -257,7 +262,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.forwardDistance)) {
+                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.FORWARD_DISTANCE)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
@@ -273,6 +278,7 @@ public class TaskHandler {
     class ForwardThread extends Thread {
         private float startPath;
         private float purposePath;
+        private float counterForChangeCoords = 0;
         private float standardSpeed = 7.0f;
         private float correctionSpeed = 0.2f;
         private float correctionSpeedCorrection = 0.1f;
@@ -285,13 +291,13 @@ public class TaskHandler {
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.robotWrap.odometryPath;
-            purposePath = straightLineCoeff * TaskHandler.forwardDistance;
+            purposePath = straightLineCoeff * TaskHandler.FORWARD_DISTANCE;
         }
 
         @Override
         public void run() {
         //    constAngle = mainActivity.odometryAngle;
-            switch(currentDirection) {
+            switch(robotWrap.currentDirection) {
                 case 0:
                     constAngle = 0;
                     break;
@@ -305,12 +311,12 @@ public class TaskHandler {
                     constAngle = (float)Math.PI/2;
                     break;
             }
-            Log.i(MainActivity.TAG, "ForwardThread started "+purposePath+" m;  direction "+currentDirection);
-            if( robot.isControllerAvailable( BodyController.class ) )
+            Log.i(MainActivity.TAG, "ForwardThread started "+purposePath+" m;  direction "+robotWrap.currentDirection);
+            if( robotWrap.robot.isControllerAvailable( BodyController.class ) )
             {
                 BodyController bodyController = null;
                 try {
-                    bodyController = (BodyController) robot.getController( BodyController.class );
+                    bodyController = (BodyController) robotWrap.robot.getController( BodyController.class );
                     if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
                     {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
@@ -319,7 +325,7 @@ public class TaskHandler {
                         corrSpeedLeft = 0;
                         corrSpeedRight = 0;
                         while(true) {
-                            correctionCode(currentDirection); //TODO
+                            correctionCode(robotWrap.currentDirection); //TODO
                             checkThread = new CheckThread(startPath,wheelsController);
                             checkThread.setRunning(true);
                             checkThread.start();
@@ -521,7 +527,65 @@ public class TaskHandler {
                     if(!(mainActivity.robotWrap.odometryPath - startPath < purposePath)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
+
+                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2*FORWARD_DISTANCE));
+                        if (n > counterForChangeCoords) {
+                            switch (robotWrap.currentDirection) {
+                                case 0:
+                                    robotWrap.currentX++;
+                                    break;
+                                case 1:
+                                    robotWrap.currentY++;
+                                    break;
+                                case 2:
+                                    robotWrap.currentX--;
+                                    break;
+                                case 3:
+                                    robotWrap.currentY--;
+                                    break;
+                            }
+                            counterForChangeCoords++;
+                            synchronized (this) {
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.editTextStartX.setText(Integer.toString(robotWrap.currentX));
+                                        mainActivity.editTextStartY.setText(Integer.toString(robotWrap.currentY));
+                                        mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
+                                    }
+                                });
+                            }
+                        }
                         return;
+                    } else {
+                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2*FORWARD_DISTANCE));
+                        if (n > counterForChangeCoords) {
+                            switch (robotWrap.currentDirection) {
+                                case 0:
+                                    robotWrap.currentX++;
+                                    break;
+                                case 1:
+                                    robotWrap.currentY++;
+                                    break;
+                                case 2:
+                                    robotWrap.currentX--;
+                                    break;
+                                case 3:
+                                    robotWrap.currentY--;
+                                    break;
+                            }
+                            counterForChangeCoords++;
+                            synchronized (this) {
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.editTextStartX.setText(Integer.toString(robotWrap.currentX));
+                                        mainActivity.editTextStartY.setText(Integer.toString(robotWrap.currentY));
+                                        mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
+                                    }
+                                });
+                            }
+                        }
                     }
                 }
             }
@@ -559,11 +623,11 @@ public class TaskHandler {
                 Log.i(MainActivity.TAG, "flag 4");
             }
 
-            if (robot.isControllerAvailable(BodyController.class)) {
+            if (robotWrap.robot.isControllerAvailable(BodyController.class)) {
                 Log.i(MainActivity.TAG,"BodyController available");
                 BodyController bodyController = null;
                 try {
-                    bodyController = (BodyController) robot.getController(BodyController.class);
+                    bodyController = (BodyController) robotWrap.robot.getController(BodyController.class);
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
                         Log.i(MainActivity.TAG,"TwoWheelsBodyController available");
                         TwoWheelsBodyController wheelsController = null;
@@ -663,11 +727,11 @@ public class TaskHandler {
                 Log.i(MainActivity.TAG, "flag 4");
             }
 
-            if (robot.isControllerAvailable(BodyController.class)) {
+            if (robotWrap.robot.isControllerAvailable(BodyController.class)) {
                 Log.i(MainActivity.TAG,"BodyController available");
                 BodyController bodyController = null;
                 try {
-                    bodyController = (BodyController) robot.getController(BodyController.class);
+                    bodyController = (BodyController) robotWrap.robot.getController(BodyController.class);
                     if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
                         Log.i(MainActivity.TAG,"TwoWheelsBodyController available");
                         TwoWheelsBodyController wheelsController = null;

@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
 
         taskHandler = new TaskHandler(link);
 
-        setClientConnectionState("Hasn't been connected");
+        setClientConnectionState("hasn't been connected");
   /*      bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);*/
@@ -110,6 +110,7 @@ public class MainActivity extends Activity {
         reconnectToRobot.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                robotWrap.reconnect();
             }
         });
 
@@ -125,6 +126,8 @@ public class MainActivity extends Activity {
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //TODO //current state is wrong (coordinates)
+                taskHandler.runningThread.interrupt();
             }
         });
 
@@ -135,10 +138,7 @@ public class MainActivity extends Activity {
                 try {
                     int fY = Integer.parseInt(editTextFinishY.getText().toString());
                     int fX = Integer.parseInt(editTextFinishX.getText().toString());
-                    int sY = Integer.parseInt(editTextStartY.getText().toString());
-                    int sX = Integer.parseInt(editTextStartX.getText().toString());
-                    int dir = Integer.parseInt(editTextDirection.getText().toString());
-                    taskHandler.setTask(sX, sY, fX, fY, dir);
+                    taskHandler.setTask(fX, fY);
                 } catch (ControllerException e) {
                 }
             }
@@ -160,15 +160,12 @@ public class MainActivity extends Activity {
                             Log.i(MainActivity.TAG,"Message:  "+recievedMessage[0]+" "+recievedMessage[1]+" "+recievedMessage[2]);
                             int fX = Integer.parseInt(recievedMessage[1]);
                             int fY = Integer.parseInt(recievedMessage[2]);
-                            int sX = Integer.parseInt(editTextStartX.getText().toString());
-                            int sY = Integer.parseInt(editTextStartY.getText().toString());
-                            int dir = Integer.parseInt(editTextDirection.getText().toString());
                             Log.i(MainActivity.TAG,"finish X: "+fX);
                             Log.i(MainActivity.TAG,"finish Y: "+fY);
                             editTextFinishX.setText(recievedMessage[1]);
                             editTextFinishY.setText(recievedMessage[2]);
                             try {
-                                taskHandler.setTask(sX, sY, fX, fY, dir);
+                                taskHandler.setTask(fX, fY);
                             } catch (ControllerException e) {
                                 e.printStackTrace();
                             }

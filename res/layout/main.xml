@@ -23,7 +23,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="state"
+                    android:text="server state"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
 
@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="robot"
+                    android:text="robot connection"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
 
@@ -54,7 +54,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="client"
+                    android:text="client connection"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -197,7 +197,8 @@
                     android:id="@+id/editTextFinishX"
                     android:layout_column="2"
                     android:layout_weight="1"
-                    android:layout_gravity="left|center_vertical" />
+                    android:layout_gravity="left|center_vertical"
+                    android:text="0" />
 
                 <EditText
                     android:layout_width="70dp"
@@ -207,7 +208,8 @@
                     android:id="@+id/editTextFinishY"
                     android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center"
+                    android:text="0" />
             </FrameLayout>
 
         </TableRow>
@@ -244,7 +246,8 @@
                     android:id="@+id/editTextStartY"
                     android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="right|center_vertical" />
+                    android:layout_gravity="right|center_vertical"
+                    android:text="0" />
 
                 <EditText
                     android:layout_width="60dp"
@@ -254,7 +257,8 @@
                     android:id="@+id/editTextStartX"
                     android:layout_column="2"
                     android:layout_weight="1"
-                    android:layout_gravity="left|center_vertical" />
+                    android:layout_gravity="left|center_vertical"
+                    android:text="0" />
             </FrameLayout>
 
             <FrameLayout
@@ -270,7 +274,8 @@
                     android:id="@+id/editTextStartDirection"
                     android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="right|center_vertical" />
+                    android:layout_gravity="right|center_vertical"
+                    android:text="0" />
             </FrameLayout>
 
         </TableRow>
@@ -416,7 +421,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewPath"
+                    android:id="@+id/textViewOdometryPath"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -449,7 +454,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewAngle"
+                    android:id="@+id/textViewOdometryAngle"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -482,7 +487,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewY"
+                    android:id="@+id/textViewOdometryY"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -515,7 +520,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewX"
+                    android:id="@+id/textViewOdometryX"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -548,7 +553,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewSpeedL"
+                    android:id="@+id/textViewOdometrySpeedL"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>
@@ -581,7 +586,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Medium Text"
-                    android:id="@+id/textViewSpeedR"
+                    android:id="@+id/textViewOdometrySpeedR"
                     android:layout_gravity="center_horizontal" />
             </FrameLayout>
         </TableRow>

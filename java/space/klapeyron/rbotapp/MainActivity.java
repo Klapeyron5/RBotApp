@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
     static final String TAG = "TAG";
 
     public String serverState;
-    public static final String SERVER_LOADED = "waiting robot";
+    public static final String SERVER_WAITING_ROBOT = "waiting robot";
     public static final String SERVER_WAITING_TASK = "waiting tasks";
 
     public String robotConnectionState;
@@ -70,9 +70,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
 
         initConstructor();
-    //    initRobot();
         robotWrap = new RobotWrap(this);
-
         taskHandler = new TaskHandler(link);
 
         setClientConnectionState("hasn't been connected");

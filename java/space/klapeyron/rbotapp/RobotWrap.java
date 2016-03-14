@@ -49,7 +49,7 @@ public class RobotWrap {
         @Override
         public void onRobotInitError() {
             ROBOT_STATE = ROBOT_INIT_ERROR;
-            mainActivity.setServerState(MainActivity.SERVER_LOADED);
+            mainActivity.setServerState(MainActivity.SERVER_WAITING_ROBOT);
             mainActivity.setRobotConnectionState(ROBOT_STATE);
             Log.i(mainActivity.TAG, ROBOT_STATE);
             //TODO //dialog with instruction to run Bridge
@@ -63,7 +63,7 @@ public class RobotWrap {
                 mainActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mainActivity.setServerState(MainActivity.SERVER_LOADED);
+                        mainActivity.setServerState(MainActivity.SERVER_WAITING_ROBOT);
                         mainActivity.setRobotConnectionState(ROBOT_STATE);
                     }
                 });
@@ -100,7 +100,6 @@ public class RobotWrap {
                 odometryAbsoluteY = (float) (-twoWheelState.getOdometryInfo().getY() + 0.5 + 0.25);
                 odometryWheelSpeedLeft = twoWheelState.getSpeed().getLWheelSpeed();
                 odometryWheelSpeedRight = twoWheelState.getSpeed().getRWheelSpeed();
-
 
                 mainActivity.textViewCountedPath.setText(Float.toString(countedPath));
                 mainActivity.textViewOdometryPath.setText(Float.toString(odometryPath));

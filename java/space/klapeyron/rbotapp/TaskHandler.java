@@ -8,14 +8,19 @@ import ru.rbot.android.bridge.service.robotcontroll.controllers.BodyController;
 import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBodyController;
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 
-
+/**
+ * main class for providing robot's movement on the path
+ */
 public class TaskHandler {
     private MainActivity mainActivity;
     public RobotWrap robotWrap;
     private Navigation navigation;
+    /**
+     * Link to executable Thread, if robot is riding to target
+     */
     public Thread runningThread;
 
-    private final static float FORWARD_DISTANCE = 0.5f;
+    private final static float SQUARE_WIDTH = 0.5f;
 
     private int[] arrayPath = {1,1,2,1,1,0,1};
     private ArrayList<Integer> path;//0-right; 1-forward; 2-left;
@@ -26,15 +31,20 @@ public class TaskHandler {
         navigation = new Navigation(this);
     }
 
+    /**
+     * set target coordinates and robot will go there
+     * @param fX target X
+     * @param fY target Y
+     */
     public void setTask(int fX, int fY) throws ControllerException {
-        robotWrap.setStartCoordinatesByServerEditText();
+        robotWrap.setStartCoordinatesByServerEditText(); //find out current robot coordinates
         navigation.setStart(robotWrap.currentY,robotWrap.currentX);
         navigation.setFinish(fY,fX);
 
         Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
         Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
 
-        path = navigation.getPath();
+        path = navigation.getPath(); //get path's commands
 
         Log.i(MainActivity.TAG,"PATH");
 
@@ -43,25 +53,30 @@ public class TaskHandler {
 
    //     path = new ArrayList<>();
    //     arrayInList();//TODO
-        TaskThread taskThread = new TaskThread();
+
+        TaskThread taskThread = new TaskThread(); //start to run on the path
         taskThread.start();
     }
 
+    /**
+     * provide robot's movement on the path in real-time
+     */
     class TaskThread extends Thread {
         @Override
         public void run() {
             float startPath = mainActivity.robotWrap.odometryPath;
             Log.i(MainActivity.TAG, "setTask start odometryPath "+startPath);
 
-            int straightLineCoeff = 0;
+            int straightLineCoefficient = 0; //number of cells, which lie on straight line
             for(int i=0;i<path.size();i++) {
                 switch(path.get(i)) {
-                    case 0:
+                    case 0: //right turn on PI/2
+                        turnRight();
+                        //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=3)
                             robotWrap.currentDirection++;
                         else
                             robotWrap.currentDirection = 0;
-                        turnRight();
                         synchronized (this) {
                             mainActivity.runOnUiThread(new Runnable() {
                                 @Override
@@ -71,18 +86,20 @@ public class TaskHandler {
                             });
                         }
                         break;
-                    case 1:
-                        straightLineCoeff++;
+                    case 1: //straight movement, if in counting straight line finished, start to move
+                        straightLineCoefficient++;
                         if (i == path.size() - 1) {
-                            distanceForward(straightLineCoeff);
-                            straightLineCoeff = 0;
+                            distanceForward(straightLineCoefficient); //start to move
+                            straightLineCoefficient = 0;
                         } else
                             if (path.get(i + 1) != 1) {
-                                distanceForward(straightLineCoeff);
-                                straightLineCoeff = 0;
+                                distanceForward(straightLineCoefficient); //start to move
+                                straightLineCoefficient = 0;
                             }
                         break;
-                    case 2:
+                    case 2: //left turn on PI/2
+                        turnLeft();
+                        //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=0)
                             robotWrap.currentDirection--;
                         else
@@ -95,20 +112,24 @@ public class TaskHandler {
                                 }
                             });
                         }
-                        turnLeft();
                         break;
                 }
             }
-       //     navigation.setStart(navigation.finish[0], navigation.finish[1]);
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath -startPath));
         }
     }
 
-    private void distanceForward(int straightLineCoeff) {
-    /*    if (straightLineCoeff == 1) {
+    /**
+     * Starts moving on straight line with size straightLineCoefficient*SQUARE_WIDTH.
+     * Control is passed to {@link space.klapeyron.rbotapp.TaskHandler.ForwardThread}.
+     * Link to new Thread is created in TaskHandler.runningThread
+     * @param straightLineCoefficient number of squares in straight line
+     */
+    private void distanceForward(int straightLineCoefficient) {
+    /*    if (straightLineCoefficient == 1) {
             ForwardThreadForSingleDistance forwardThreadForSingleDistance = new ForwardThreadForSingleDistance();
-            forwardThreadForSingleDistance.start(); //acceleration on first FORWARD_DISTANCE
+            forwardThreadForSingleDistance.start(); //acceleration on first SQUARE_WIDTH
             try {
                 forwardThreadForSingleDistance.join();
             } catch (InterruptedException e) {}
@@ -116,13 +137,13 @@ public class TaskHandler {
         } else {
 
             StartingForwardThread startingForwardThread = new StartingForwardThread();
-            startingForwardThread.start(); //acceleration on first FORWARD_DISTANCE
+            startingForwardThread.start(); //acceleration on first SQUARE_WIDTH
             try {
                 startingForwardThread.join();
             } catch (InterruptedException e) {}
-            straightLineCoeff--;*/
-            if (straightLineCoeff > 0) {
-                ForwardThread forwardThread = new ForwardThread(straightLineCoeff);
+            straightLineCoefficient--;*/
+            if (straightLineCoefficient > 0) {
+                ForwardThread forwardThread = new ForwardThread(straightLineCoefficient);
                 runningThread = forwardThread;
                 forwardThread.start();
                 try {
@@ -200,7 +221,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.FORWARD_DISTANCE)) {
+                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.SQUARE_WIDTH)) {
                         stopFlag = true;
                         return;
                     }
@@ -262,7 +283,7 @@ public class TaskHandler {
             @Override
             public void run() {
                 while(running) {
-                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.FORWARD_DISTANCE)) {
+                    if(!(mainActivity.robotWrap.odometryPath - startPath < TaskHandler.SQUARE_WIDTH)) {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
                         return;
@@ -291,7 +312,7 @@ public class TaskHandler {
 
         ForwardThread(int straightLineCoeff) {
             startPath = mainActivity.robotWrap.odometryPath;
-            purposePath = straightLineCoeff * TaskHandler.FORWARD_DISTANCE;
+            purposePath = straightLineCoeff * TaskHandler.SQUARE_WIDTH;
         }
 
         @Override
@@ -528,7 +549,7 @@ public class TaskHandler {
                         wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                         stopFlag = true;
 
-                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2*FORWARD_DISTANCE));
+                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2* SQUARE_WIDTH));
                         if (n > counterForChangeCoords) {
                             switch (robotWrap.currentDirection) {
                                 case 0:
@@ -558,7 +579,7 @@ public class TaskHandler {
                         }
                         return;
                     } else {
-                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2*FORWARD_DISTANCE));
+                        int n = ((int)(2*(mainActivity.robotWrap.odometryPath - startPath)))/((int) (2* SQUARE_WIDTH));
                         if (n > counterForChangeCoords) {
                             switch (robotWrap.currentDirection) {
                                 case 0:

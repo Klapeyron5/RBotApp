@@ -23,7 +23,8 @@ public class MainActivity extends Activity {
 
     public String serverState;
     public static final String SERVER_WAITING_ROBOT = "waiting robot";
-    public static final String SERVER_WAITING_TASK = "waiting tasks";
+    public static final String SERVER_WAITING_NEW_TASK = "waiting new task";
+    public static final String SERVER_EXECUTING_TASK = "executing task";
 
     public String robotConnectionState;
     public static final String OnConnectedRobotState = "connected";
@@ -137,8 +138,7 @@ public class MainActivity extends Activity {
                     int fY = Integer.parseInt(editTextFinishY.getText().toString());
                     int fX = Integer.parseInt(editTextFinishX.getText().toString());
                     taskHandler.setTask(fX, fY);
-                } catch (ControllerException e) {
-                }
+                } catch (ControllerException e) {}
             }
         });
     }

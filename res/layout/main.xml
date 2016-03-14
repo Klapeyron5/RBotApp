@@ -178,7 +178,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="finish X Y"
+                    android:text="finish X,Y"
                     android:layout_column="0"
                     android:layout_gravity="center"
                     android:layout_marginLeft="10dp" />
@@ -227,7 +227,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="current X Y Direction"
+                    android:text="current X,Y,dir"
                     android:layout_column="0"
                     android:layout_gravity="left|center_vertical"
                     android:layout_marginLeft="10dp" />

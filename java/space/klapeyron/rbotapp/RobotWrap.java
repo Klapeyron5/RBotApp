@@ -20,9 +20,9 @@ public class RobotWrap {
     public Robot robot;
     private MainActivity mainActivity;
 
-    //current coordinates
-    public int currentX;
-    public int currentY;
+    //current cells coordinates
+    public int currentCellX;
+    public int currentCellY;
 
     //counted odometry info
     float countedPath;
@@ -41,7 +41,7 @@ public class RobotWrap {
         public void onRobotReady() {
             setReadingOdometry();
             ROBOT_STATE = ROBOT_CONNECTED;
-            mainActivity.setServerState(MainActivity.SERVER_WAITING_TASK);
+            mainActivity.setServerState(MainActivity.SERVER_WAITING_NEW_TASK);
             mainActivity.setRobotConnectionState(ROBOT_STATE);
             Log.i(mainActivity.TAG, ROBOT_STATE);
         }
@@ -79,8 +79,8 @@ public class RobotWrap {
     }
 
     public void setStartCoordinatesByServerEditText() {
-        currentX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
-        currentY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());
+        currentCellX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
+        currentCellY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());
         currentDirection = Integer.parseInt(mainActivity.editTextDirection.getText().toString());
     }
 

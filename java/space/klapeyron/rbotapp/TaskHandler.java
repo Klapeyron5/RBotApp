@@ -79,7 +79,8 @@ public class TaskHandler {
             for(int i=0;i<path.size();i++) {
                 switch(path.get(i)) {
                     case 0: //right turn on PI/2
-                        turnRight();
+                    //    turnRight();
+                        turn(-(float)Math.PI/2);
                         //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=3)
                             robotWrap.currentDirection++;
@@ -106,7 +107,8 @@ public class TaskHandler {
                             }
                         break;
                     case 2: //left turn on PI/2
-                        turnLeft();
+                    //    turnLeft();
+                        turn((float)Math.PI/2);
                         //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=0)
                             robotWrap.currentDirection--;
@@ -169,6 +171,16 @@ public class TaskHandler {
                 runningThread = null;
             }
     //    }
+    }
+
+    private void turn(float angle) {
+        TurnThread turnThread = new TurnThread(angle);
+        runningThread = turnThread;
+        turnThread.start();
+        try {
+            turnThread.join();
+        } catch (InterruptedException e) {}
+        runningThread = null;
     }
 
     private void turnLeft() {
@@ -330,7 +342,6 @@ public class TaskHandler {
          * Range of allowed deviation robot's angle from the direction.
          */
         private float rangeValidDeviation = 0.01f;
-        private float constAngle = 0;//(float)-Math.PI; //TODO
         private TwoWheelsBodyController wheelsController = null;
         private float dtAngle = mainActivity.robotWrap.odometryAngle; //odometryAngle with the last iteration (for derivative counting)
         private float corrSpeedLeft = 0;
@@ -346,29 +357,11 @@ public class TaskHandler {
 
         @Override
         public void run() {
-        //    constAngle = mainActivity.odometryAngle;
-            switch(robotWrap.currentDirection) {
-                case 0:
-                    constAngle = 0;
-                    break;
-                case 1:
-                    constAngle = (float)-Math.PI/2;
-                    break;
-                case 2:
-                    constAngle = (float)Math.PI;
-                    break;
-                case 3:
-                    constAngle = (float)Math.PI/2;
-                    break;
-            }
             Log.i(MainActivity.TAG, "ForwardThread started "+purposePath+" m;  direction "+robotWrap.currentDirection);
-            if( robotWrap.robot.isControllerAvailable( BodyController.class ) )
-            {
-                BodyController bodyController = null;
+            if( robotWrap.robot.isControllerAvailable( BodyController.class ) ) {
                 try {
-                    bodyController = (BodyController) robotWrap.robot.getController( BodyController.class );
-                    if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) )
-                    {
+                    BodyController bodyController = (BodyController) robotWrap.robot.getController( BodyController.class );
+                    if( bodyController.isControllerAvailable( TwoWheelsBodyController.class ) ) {
                         wheelsController = (TwoWheelsBodyController) bodyController.getController( TwoWheelsBodyController.class );
                         CheckThread checkThread;
                         dtAngle = robotWrap.odometryAngle;
@@ -391,7 +384,7 @@ public class TaskHandler {
 
         private void correctionCode(int currentDirection) {
             float angle = robotWrap.odometryAngle;
-            //lead all directions to 0 dir
+            //lead all directions to 0 direction
             switch(currentDirection) {
                 case 1:
                     angle += Math.PI/2;
@@ -517,6 +510,54 @@ public class TaskHandler {
             }
             public void setRunning(boolean r) {
                 running = r;
+            }
+        }
+    }
+
+    /**
+     * Turn robot on angle
+     */
+    class TurnThread extends Thread {
+        private float startAngle;
+        private float purposeDifferenceAngle;
+        private float currentAngle;
+
+        /**
+         * @param angle difference between old and new angle, if > 0 - left turn, if < 0 - right turn
+         */
+        TurnThread(float angle) {
+            startAngle = robotWrap.odometryAngle;
+            if (Math.abs(angle) < Math.PI)
+                purposeDifferenceAngle = angle;
+            else
+                purposeDifferenceAngle = angle % (float)Math.PI;
+            currentAngle = 0;
+        }
+
+        @Override
+        public void run() {
+            if (robotWrap.robot.isControllerAvailable(BodyController.class)) {
+                try {
+                    BodyController bodyController = (BodyController) robotWrap.robot.getController(BodyController.class);
+                    if (bodyController.isControllerAvailable(TwoWheelsBodyController.class)) {
+                        TwoWheelsBodyController wheelsController = (TwoWheelsBodyController) bodyController.getController(TwoWheelsBodyController.class);
+                        wheelsController.turnAround(10f, purposeDifferenceAngle);
+                        Log.i(MainActivity.TAG, "turnAround");
+                        Log.i(MainActivity.TAG, "startAngle " + startAngle);
+                        Log.i(MainActivity.TAG, "odometryAngle " + robotWrap.odometryAngle);
+                        while (true) {
+                            currentAngle = robotWrap.odometryAngle - startAngle;
+                            if (Math.abs(currentAngle) > Math.abs(purposeDifferenceAngle)) {
+                                wheelsController.setWheelsSpeeds(0.0f, 0.0f);
+                                try {
+                                    sleep(200);
+                                } catch (InterruptedException e) {}
+                                Log.i(MainActivity.TAG, "TurnThread finished ------------>>>>> ");
+                                return;
+                            }
+                        }
+                    }
+                } catch (ControllerException e) {}
             }
         }
     }

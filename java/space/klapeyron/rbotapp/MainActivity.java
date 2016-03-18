@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +18,8 @@ import space.klapeyron.rbotapp.BluetoothClientConnection.Communicator;
 import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorImpl;
 import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorService;
 import space.klapeyron.rbotapp.BluetoothClientConnection.ServerThread;
+import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapActivity;
+import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapView;
 
 public class MainActivity extends Activity {
     static final String TAG = "TAG";
@@ -25,6 +28,10 @@ public class MainActivity extends Activity {
     public static final String SERVER_WAITING_ROBOT = "waiting robot";
     public static final String SERVER_WAITING_NEW_TASK = "waiting new task";
     public static final String SERVER_EXECUTING_TASK = "executing task";
+
+    private String serverActivityState;
+    public static final  String ACTIVITY_STATE_MAIN_XML = "main.xml";
+    public static final  String ACTIVITY_STATE_INTERACTIVE_MAP = "interactive map";
 
     public String robotConnectionState;
     public static final String OnConnectedRobotState = "connected";
@@ -105,8 +112,19 @@ public class MainActivity extends Activity {
         editTextStartY = (EditText) findViewById(R.id.editTextStartY);
         editTextDirection = (EditText) findViewById(R.id.editTextStartDirection);
 
-        Button reconnectToRobot = (Button) findViewById(R.id.buttonReconnectToRobot);
-        reconnectToRobot.setOnClickListener(new View.OnClickListener(){
+        Button buttonMap = (Button) findViewById(R.id.buttonMap);
+        buttonMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+         //       Intent intent = new Intent(MainActivity.this, InteractiveMapActivity.class);
+         //       startActivity(intent);
+                setContentView(new InteractiveMapView(link));
+                serverActivityState = ACTIVITY_STATE_INTERACTIVE_MAP;
+            }
+        });
+
+        Button buttonReconnectToRobot = (Button) findViewById(R.id.buttonReconnectToRobot);
+        buttonReconnectToRobot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 robotWrap.reconnect();
@@ -141,6 +159,29 @@ public class MainActivity extends Activity {
                 } catch (ControllerException e) {}
             }
         });
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //replaces the default 'Back' button action
+        if(keyCode == KeyEvent.KEYCODE_BACK)
+        {
+            switch(serverActivityState) {
+                case ACTIVITY_STATE_MAIN_XML:
+                    break;
+                case ACTIVITY_STATE_INTERACTIVE_MAP:
+                    setContentView(R.layout.main);
+                    initConstructor();
+                    setServerState(serverState);
+                    setRobotConnectionState(robotConnectionState);
+                    setClientConnectionState(clientConnectionState);
+                    editTextFinishX.setText(Integer.toString(taskHandler.finishX));
+                    editTextFinishY.setText(Integer.toString(taskHandler.finishY));
+                    robotWrap.writeCurrentPositionOnServerDisplay();
+                    break;
+            }
+        }
+        return false;
     }
 
     private final CommunicatorService communicatorService = new CommunicatorService() {
@@ -182,14 +223,17 @@ public class MainActivity extends Activity {
     }
 
     public void setServerState(String state) {
+        serverState = state;
         textViewServerState.setText(state);
     }
 
     public void setRobotConnectionState(String state) {
+        robotConnectionState = state;
         textViewRobotConnectionState.setText(state);
     }
 
     public void setClientConnectionState(String state) {
+        clientConnectionState = state;
         textViewClientConnectionState.setText(state);
     }
 

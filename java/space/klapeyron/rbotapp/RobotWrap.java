@@ -78,6 +78,31 @@ public class RobotWrap {
         robot.start();
     }
 
+    /**
+     * Set robot position
+     * @param cellX current number of cell in X
+     * @param cellY current nymber of cell in Y
+     * @param direction current direction: 0 - positive on X, 1 - positive on Y, 2 - negative on X, 3 - negative on Y
+     */
+    public void setPosition(int cellX,int cellY,int direction) {
+        currentCellX = cellX;
+        currentCellY = cellY;
+        currentDirection = direction;
+    }
+
+    public void writeCurrentPositionOnServerDisplay() {
+        synchronized (this) {
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mainActivity.editTextStartX.setText(Integer.toString(currentCellX));
+                    mainActivity.editTextStartY.setText(Integer.toString(currentCellY));
+                    mainActivity.editTextDirection.setText(Integer.toString(currentDirection));
+                }
+            });
+        }
+    }
+
     public void setStartCoordinatesByServerEditText() {
         currentCellX = Integer.parseInt(mainActivity.editTextStartX.getText().toString());
         currentCellY = Integer.parseInt(mainActivity.editTextStartY.getText().toString());

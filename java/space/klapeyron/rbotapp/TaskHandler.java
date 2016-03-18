@@ -25,6 +25,9 @@ public class TaskHandler {
     private int[] arrayPath = {1,1,2,1,1,0,1};
     private ArrayList<Integer> path;//0-right; 1-forward; 2-left;
 
+    public int finishX = 0;
+    public int finishY = 0;
+
     TaskHandler(MainActivity m) {
         mainActivity = m;
         robotWrap = mainActivity.robotWrap;
@@ -40,6 +43,8 @@ public class TaskHandler {
         robotWrap.setStartCoordinatesByServerEditText(); //find out current robot coordinates
         navigation.setStart(robotWrap.currentCellY,robotWrap.currentCellX);
         navigation.setFinish(fY,fX);
+        finishX = fX;
+        finishY = fY;
 
         Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
         Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
@@ -79,21 +84,14 @@ public class TaskHandler {
             for(int i=0;i<path.size();i++) {
                 switch(path.get(i)) {
                     case 0: //right turn on PI/2
-                    //    turnRight();
-                        turn(-(float)Math.PI/2);
+                        turnRight();
+                    //    turn(-(float)Math.PI/2);
                         //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=3)
                             robotWrap.currentDirection++;
                         else
                             robotWrap.currentDirection = 0;
-                        synchronized (this) {
-                            mainActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
-                                }
-                            });
-                        }
+                        robotWrap.writeCurrentPositionOnServerDisplay();
                         break;
                     case 1: //straight movement, if in counting straight line finished, start to move
                         straightLineCoefficient++;
@@ -107,21 +105,14 @@ public class TaskHandler {
                             }
                         break;
                     case 2: //left turn on PI/2
-                    //    turnLeft();
-                        turn((float)Math.PI/2);
+                        turnLeft();
+                     //   turn((float)Math.PI/2);
                         //than we think, that turn was successfully ended and change current robot's direction
                         if(robotWrap.currentDirection!=0)
                             robotWrap.currentDirection--;
                         else
                             robotWrap.currentDirection = 3;
-                        synchronized (this) {
-                            mainActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
-                                }
-                            });
-                        }
+                        robotWrap.writeCurrentPositionOnServerDisplay();
                         break;
                 }
             }
@@ -464,16 +455,7 @@ public class TaskHandler {
                                     break;
                             }
                             counterForChangeCoords++;
-                            synchronized (this) {
-                                mainActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mainActivity.editTextStartX.setText(Integer.toString(robotWrap.currentCellX));
-                                        mainActivity.editTextStartY.setText(Integer.toString(robotWrap.currentCellY));
-                                        mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
-                                    }
-                                });
-                            }
+                            robotWrap.writeCurrentPositionOnServerDisplay();
                         }
                         return;
                     } else {
@@ -494,16 +476,7 @@ public class TaskHandler {
                                     break;
                             }
                             counterForChangeCoords++;
-                            synchronized (this) {
-                                mainActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mainActivity.editTextStartX.setText(Integer.toString(robotWrap.currentCellX));
-                                        mainActivity.editTextStartY.setText(Integer.toString(robotWrap.currentCellY));
-                                        mainActivity.editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
-                                    }
-                                });
-                            }
+                            robotWrap.writeCurrentPositionOnServerDisplay();
                         }
                     }
                 }
@@ -527,10 +500,11 @@ public class TaskHandler {
          */
         TurnThread(float angle) {
             startAngle = robotWrap.odometryAngle;
-            if (Math.abs(angle) < Math.PI)
+            purposeDifferenceAngle = (float) (Math.PI/2);
+        /*    if (Math.abs(angle) < Math.PI)
                 purposeDifferenceAngle = angle;
             else
-                purposeDifferenceAngle = angle % (float)Math.PI;
+                purposeDifferenceAngle = angle % (float)Math.PI;*/
             currentAngle = 0;
         }
 
@@ -547,11 +521,12 @@ public class TaskHandler {
                         Log.i(MainActivity.TAG, "odometryAngle " + robotWrap.odometryAngle);
                         while (true) {
                             currentAngle = robotWrap.odometryAngle - startAngle;
-                            if (Math.abs(currentAngle) > Math.abs(purposeDifferenceAngle)) {
+                            if (currentAngle > purposeDifferenceAngle) {
                                 wheelsController.setWheelsSpeeds(0.0f, 0.0f);
                                 try {
                                     sleep(200);
                                 } catch (InterruptedException e) {}
+                                Log.i(MainActivity.TAG, "currentAngle "+ currentAngle);
                                 Log.i(MainActivity.TAG, "TurnThread finished ------------>>>>> ");
                                 return;
                             }

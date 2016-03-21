@@ -42,6 +42,11 @@ public class ServerThread extends Thread {
             }
             if (socket != null) {
                 communicatorService.createCommunicatorThread(socket).startCommunication();
+                try {
+                    bluetoothServerSocket.close(); //TODO //added by klapeyron
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

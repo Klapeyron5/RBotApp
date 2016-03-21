@@ -44,7 +44,6 @@ public class MainActivity extends Activity {
     public static String hashString = "go";
     private ServerThread serverThread;
     private ClientThread clientThread;
-    private BluetoothAdapter bluetoothAdapter;
 
     ru.rbot.android.bridge.service.robotcontroll.robots.Robot robot;
     RobotWrap robotWrap;
@@ -78,14 +77,24 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         serverActivityState = ACTIVITY_STATE_MAIN_XML;
 
+        Log.i(TAG,"OnCreate()");
+
         initConstructor();
-        robotWrap = new RobotWrap(this);
-        taskHandler = new TaskHandler(link);
 
         setClientConnectionState("hasn't been connected");
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter != null) {
+            if (bluetoothAdapter.isEnabled()) {
+                robotWrap = new RobotWrap(this);
+                taskHandler = new TaskHandler(link);
+                serverThread = new ServerThread(communicatorService);
+                serverThread.start();
+            } else {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
+            }
+        }
     }
 
     @Override
@@ -93,6 +102,23 @@ public class MainActivity extends Activity {
         super.onResume();
         serverThread = new ServerThread(communicatorService);
         serverThread.start();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            robotWrap = new RobotWrap(this);
+            taskHandler = new TaskHandler(link);
+
+            serverThread = new ServerThread(communicatorService);
+            serverThread.start();
+        }
+        if (resultCode == RESULT_CANCELED) {
+            setServerState("bluetooth off");
+            setRobotConnectionState("bluetooth off");
+            setClientConnectionState("bluetooth off");
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void initConstructor() {
@@ -249,8 +275,7 @@ public class MainActivity extends Activity {
     }
 
     public void makeDiscoverable(View view) {
-        Intent i = new Intent(
-                BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        Intent i = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         i.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
         startActivity(i);
     }

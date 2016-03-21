@@ -21,8 +21,9 @@ public class InteractiveMapView extends View {
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint paint, mBitmapPaint;
-    private final int horizontalCountOfCells, verticalCountOfCells;
-    private int textCoordinatesSize = 14;
+    private final int horizontalCountOfCells = 13;
+    private final int verticalCountOfCells = 18;
+    private final int textCoordinatesSize = 14;
 
     private int screenWidth;
     private int screenHeight;
@@ -30,14 +31,23 @@ public class InteractiveMapView extends View {
     private int cellHeight;
     private int cellsLineWidth = 2;
 
-    public InteractiveMapView(Context context) {
+    public InteractiveMapView(Context context, int X, int Y) {
         super(context);
         mainActivity = (MainActivity) context;
 
-        //размер игрового поля
-        horizontalCountOfCells =13;
-        verticalCountOfCells =18;
+        setEmptyMapBitmap();
+        drawRobotOnMap(X, Y);
+    }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+    }
+
+    /**
+     * Draw empty map on InteractiveMapView.mBitmap variable
+     */
+    private void setEmptyMapBitmap() {
         //вычисляем размеры экрана
         DisplayMetrics metrics = new DisplayMetrics();
         mainActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -83,9 +93,9 @@ public class InteractiveMapView extends View {
         }
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+    public void drawRobotOnMap(int X, int Y) {
+    //    mCanvas.drawPoint(X *cellWidth,Y*cellHeight,paint);
+        mCanvas.drawCircle(X *cellWidth+cellWidth/2,Y*cellHeight+cellHeight/2,cellWidth/4,paint);
     }
 
     private void onDrawPath() {

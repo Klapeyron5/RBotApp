@@ -76,6 +76,7 @@ public class RobotWrap {
         mainActivity = m;
         robot.setRobotStateListener(robotStateListener);
         robot.start();
+        setStartCoordinatesByServerEditText();
     }
 
     /**

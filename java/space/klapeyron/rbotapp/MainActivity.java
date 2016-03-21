@@ -18,7 +18,6 @@ import space.klapeyron.rbotapp.BluetoothClientConnection.Communicator;
 import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorImpl;
 import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorService;
 import space.klapeyron.rbotapp.BluetoothClientConnection.ServerThread;
-import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapActivity;
 import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapView;
 
 public class MainActivity extends Activity {
@@ -51,6 +50,7 @@ public class MainActivity extends Activity {
     RobotWrap robotWrap;
 
     MainActivity link = this;
+    InteractiveMapView interactiveMapView;
     TaskHandler taskHandler;
     TTSManager ttsManager = null;
 
@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        serverActivityState = ACTIVITY_STATE_MAIN_XML;
 
         initConstructor();
         robotWrap = new RobotWrap(this);
@@ -118,7 +119,8 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
          //       Intent intent = new Intent(MainActivity.this, InteractiveMapActivity.class);
          //       startActivity(intent);
-                setContentView(new InteractiveMapView(link));
+                interactiveMapView = new InteractiveMapView(link,robotWrap.currentCellX,robotWrap.currentCellY);
+                setContentView(interactiveMapView);
                 serverActivityState = ACTIVITY_STATE_INTERACTIVE_MAP;
             }
         });
@@ -178,6 +180,7 @@ public class MainActivity extends Activity {
                     editTextFinishX.setText(Integer.toString(taskHandler.finishX));
                     editTextFinishY.setText(Integer.toString(taskHandler.finishY));
                     robotWrap.writeCurrentPositionOnServerDisplay();
+                    serverActivityState = ACTIVITY_STATE_MAIN_XML;
                     break;
             }
         }
@@ -214,6 +217,36 @@ public class MainActivity extends Activity {
             });
         }
     };
+
+    public void displayRobotPosition() {
+        switch(serverActivityState) {
+            case ACTIVITY_STATE_MAIN_XML:
+                Log.i(TAG,"displayRobotPosition() ACTIVITY_STATE_MAIN_XML");
+                synchronized (this) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            editTextStartX.setText(Integer.toString(robotWrap.currentCellX));
+                            editTextStartY.setText(Integer.toString(robotWrap.currentCellY));
+                            editTextDirection.setText(Integer.toString(robotWrap.currentDirection));
+                        }
+                    });
+                }
+                break;
+            case ACTIVITY_STATE_INTERACTIVE_MAP:
+                Log.i(TAG,"displayRobotPosition() ACTIVITY_STATE_INTERACTIVE_MAP");
+                synchronized (this) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            interactiveMapView = new InteractiveMapView(link,robotWrap.currentCellX,robotWrap.currentCellY);
+                            setContentView(interactiveMapView);
+                        }
+                    });
+                }
+                break;
+        }
+    }
 
     public void makeDiscoverable(View view) {
         Intent i = new Intent(

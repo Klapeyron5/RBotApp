@@ -91,7 +91,8 @@ public class TaskHandler {
                             robotWrap.currentDirection++;
                         else
                             robotWrap.currentDirection = 0;
-                        robotWrap.writeCurrentPositionOnServerDisplay();
+                //        robotWrap.writeCurrentPositionOnServerDisplay();
+                        mainActivity.displayRobotPosition();
                         break;
                     case 1: //straight movement, if in counting straight line finished, start to move
                         straightLineCoefficient++;
@@ -112,7 +113,8 @@ public class TaskHandler {
                             robotWrap.currentDirection--;
                         else
                             robotWrap.currentDirection = 3;
-                        robotWrap.writeCurrentPositionOnServerDisplay();
+                       // robotWrap.writeCurrentPositionOnServerDisplay();
+                        mainActivity.displayRobotPosition();
                         break;
                 }
             }
@@ -455,7 +457,8 @@ public class TaskHandler {
                                     break;
                             }
                             counterForChangeCoords++;
-                            robotWrap.writeCurrentPositionOnServerDisplay();
+                        //    robotWrap.writeCurrentPositionOnServerDisplay();
+                            mainActivity.displayRobotPosition();
                         }
                         return;
                     } else {
@@ -476,7 +479,8 @@ public class TaskHandler {
                                     break;
                             }
                             counterForChangeCoords++;
-                            robotWrap.writeCurrentPositionOnServerDisplay();
+                       //     robotWrap.writeCurrentPositionOnServerDisplay();
+                            mainActivity.displayRobotPosition();
                         }
                     }
                 }

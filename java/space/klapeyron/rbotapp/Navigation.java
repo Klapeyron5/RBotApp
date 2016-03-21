@@ -1,11 +1,12 @@
 package space.klapeyron.rbotapp;
 
+import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 
 import java.util.ArrayList;
 
 public class Navigation {
-    Navigation() {}
+    public Navigation() {}
     Navigation(TaskHandler t) {
         taskHandler = t;
     }
@@ -49,9 +50,10 @@ public class Navigation {
     int[][] consideredPoints = new int[m*n][4]; // Массив рассмотренных точек (максимально их количество может быть равно m*n)
 
     TaskHandler taskHandler;
-    ArrayList<Integer> path = new ArrayList<Integer>();
+    ArrayList<Integer> pathCommandsForRobot = new ArrayList<Integer>();
+    public ArrayList<Integer> absolutePath;
 
-    public ArrayList<Integer> getPath()
+    public ArrayList<Integer> getPathCommandsForRobot()
     {
         buildPath();
         int Path[][] = new int[k+1][2];
@@ -83,61 +85,62 @@ public class Navigation {
                 Direction[i] = 2;
             }
         }
+        absolutePath = new ArrayList<Integer>(Direction[0]);
         for(i=0;i<k;i++)
             Log.i(MainActivity.TAG,Direction[i]+"");
       //      System.out.println(Direction[i]);
 
 
         //TODO //correct start odometryAngle
-        path.clear();
+        pathCommandsForRobot.clear();
         if (taskHandler.robotWrap.currentDirection != Direction[0]) {
             int currDir = taskHandler.robotWrap.currentDirection;
             if     (((currDir == 0) && (Direction[0] == 1)) ||
                     ((currDir == 1) && (Direction[0] == 2)) ||
                     ((currDir == 2) && (Direction[0] == 3)) ||
                     ((currDir == 3) && (Direction[0] == 0))) {
-                path.add(0);
-                path.add(1);
+                pathCommandsForRobot.add(0);
+                pathCommandsForRobot.add(1);
             } else
                 if (((currDir == 0) && (Direction[0] == 3)) ||
                     ((currDir == 3) && (Direction[0] == 2)) ||
                     ((currDir == 2) && (Direction[0] == 1)) ||
                     ((currDir == 1) && (Direction[0] == 0))) {
-                path.add(2);
-                path.add(1);
+                pathCommandsForRobot.add(2);
+                pathCommandsForRobot.add(1);
             } else
                 if (Math.abs(currDir - Direction[0]) == 2) {
                     Log.i(MainActivity.TAG,"PI turn");
-                    path.add(2); //TODO //not work
-                    path.add(2);
-                    path.add(1);
+                    pathCommandsForRobot.add(2); //TODO //not work
+                    pathCommandsForRobot.add(2);
+                    pathCommandsForRobot.add(1);
             }
         } else {
-            path.add(1);
+            pathCommandsForRobot.add(1);
         }
 
         for(int i=1;i<Direction.length;i++) {
             if(Direction[i] == Direction[i-1])
-                path.add(1);
+                pathCommandsForRobot.add(1);
             else {
                 if     (((Direction[i - 1] == 0) && (Direction[i] == 1)) ||
                         ((Direction[i - 1] == 1) && (Direction[i] == 2)) ||
                         ((Direction[i - 1] == 2) && (Direction[i] == 3)) ||
                         ((Direction[i - 1] == 3) && (Direction[i] == 0))) {
-                    path.add(0);
-                    path.add(1);
+                    pathCommandsForRobot.add(0);
+                    pathCommandsForRobot.add(1);
                 }
                 else
                 if     (((Direction[i-1]==0)&&(Direction[i]==3))||
                         ((Direction[i-1]==3)&&(Direction[i]==2))||
                         ((Direction[i-1]==2)&&(Direction[i]==1))||
                         ((Direction[i-1]==1)&&(Direction[i]==0))) {
-                    path.add(2);
-                    path.add(1);
+                    pathCommandsForRobot.add(2);
+                    pathCommandsForRobot.add(1);
                 }
             }
         }
-        return path;
+        return pathCommandsForRobot;
     }
 
     public void buildPath()

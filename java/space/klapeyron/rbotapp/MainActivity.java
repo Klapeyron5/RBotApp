@@ -22,7 +22,7 @@ import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapActivity;
 import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapView;
 
 public class MainActivity extends Activity {
-    static final String TAG = "TAG";
+    public static final String TAG = "TAG";
 
     public String serverState;
     public static final String SERVER_WAITING_ROBOT = "waiting robot";
@@ -82,9 +82,9 @@ public class MainActivity extends Activity {
         taskHandler = new TaskHandler(link);
 
         setClientConnectionState("hasn't been connected");
-  /*      bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);*/
+        startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
     }
 
     @Override

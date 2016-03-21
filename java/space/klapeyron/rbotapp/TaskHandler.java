@@ -9,7 +9,7 @@ import ru.rbot.android.bridge.service.robotcontroll.controllers.body.TwoWheelsBo
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
 
 /**
- * main class for providing robot's movement on the path
+ * main class for providing robot's movement on the pathCommandsForRobot
  */
 public class TaskHandler {
     private MainActivity mainActivity;
@@ -49,22 +49,22 @@ public class TaskHandler {
         Log.i(MainActivity.TAG, "Start coordinates: " + navigation.getStart()[0] + " " + navigation.getStart()[1]);
         Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
 
-        path = navigation.getPath(); //get path's commands
+        path = navigation.getPathCommandsForRobot(); //get pathCommandsForRobot's commands
 
         Log.i(MainActivity.TAG,"PATH");
 
         for(int i=0;i<path.size();i++)
             Log.i(MainActivity.TAG,path.get(i)+"");
 
-   //     path = new ArrayList<>();
+   //     pathCommandsForRobot = new ArrayList<>();
    //     arrayInList();//TODO
 
-        TaskThread taskThread = new TaskThread(); //start to run on the path
+        TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
         taskThread.start();
     }
 
     /**
-     * provide robot's movement on the path in real-time
+     * provide robot's movement on the pathCommandsForRobot in real-time
      */
     class TaskThread extends Thread {
         @Override

@@ -245,10 +245,10 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:ems="10"
-                    android:id="@+id/editTextStartY"
-                    android:layout_column="3"
+                    android:id="@+id/editTextStartX"
+                    android:layout_column="2"
                     android:layout_weight="1"
-                    android:layout_gravity="right|center_vertical"
+                    android:layout_gravity="left|center_vertical"
                     android:text="0" />
 
                 <EditText
@@ -256,10 +256,10 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:ems="10"
-                    android:id="@+id/editTextStartX"
-                    android:layout_column="2"
+                    android:id="@+id/editTextStartY"
+                    android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="left|center_vertical"
+                    android:layout_gravity="right|center_vertical"
                     android:text="0" />
             </FrameLayout>
 
@@ -276,35 +276,42 @@
                     android:id="@+id/editTextStartDirection"
                     android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="right|center_vertical"
+                    android:layout_gravity="left|center_vertical"
                     android:text="0" />
+
             </FrameLayout>
 
         </TableRow>
-
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="STOP"
-                android:id="@+id/buttonStop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_gravity="left" />
+                android:text="STOP"
+                android:id="@+id/buttonStop"/>
 
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Set Task"
                 android:id="@+id/buttonSetTask"
-                android:layout_weight="1"
-                android:layout_gravity="right" />
-        </TableRow>
+                android:layout_weight="1"/>
 
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Voice"
+                android:id="@+id/buttonVoice"
+                android:layout_weight="1"
+                android:onClick="voiceButton"/>
+
+        </TableRow>
     </TableLayout>
 
     <TableLayout

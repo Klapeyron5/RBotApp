@@ -51,8 +51,7 @@ public class MainActivity extends Activity {
     MainActivity link = this;
     InteractiveMapView interactiveMapView;
     TaskHandler taskHandler;
-    TTSManager ttsManager = null;
-
+    TTSManager TTS = new TTSManager() ;
 
     //customizing server interface
     private TextView textViewServerState;
@@ -79,6 +78,7 @@ public class MainActivity extends Activity {
 
         Log.i(TAG,"OnCreate()");
 
+        TTS.init(this);
         initConstructor();
 
         setClientConnectionState("hasn't been connected");
@@ -295,33 +295,7 @@ public class MainActivity extends Activity {
         textViewClientConnectionState.setText(state);
     }
 
-
-
-
-
-  /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
-        btnTextSpeech.setOnClickListener(new View.OnClickListener(){
-            @Override
-        public void onClick(View v){
-                ttsManager.Greeting();
-            }
-        });*/
-    /*@Override
-    public void onPause() {
-        super.onPause();
-        bluetoothAdapter.cancelDiscovery();
-
-        if (discoverDevicesReceiver != null) {
-            try {
-                unregisterReceiver(discoverDevicesReceiver);
-            } catch (Exception e) {
-                Log.d("MainActivity", "Не удалось отключить ресивер " + discoverDevicesReceiver);
-            }
+    public void voiceButton(View arg0){
+        TTS.Greeting();
         }
-
-        if (clientThread != null) {
-            clientThread.cancel();
-        }
-        if (serverThread != null) serverThread.cancel();
-    }*/
 }

@@ -2,6 +2,8 @@ package space.klapeyron.rbotapp;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,12 +14,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Set;
+
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
-import space.klapeyron.rbotapp.BluetoothClientConnection.ClientThread;
-import space.klapeyron.rbotapp.BluetoothClientConnection.Communicator;
-import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorImpl;
-import space.klapeyron.rbotapp.BluetoothClientConnection.CommunicatorService;
-import space.klapeyron.rbotapp.BluetoothClientConnection.ServerThread;
 import space.klapeyron.rbotapp.InteractiveMap.InteractiveMapView;
 
 public class MainActivity extends Activity {
@@ -39,11 +41,16 @@ public class MainActivity extends Activity {
 
 
 
-    public static final int MY_BLUETOOTH_ENABLE_REQUEST_ID = 6;
-    public final static String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
-    public static String hashString = "go";
-    private ServerThread serverThread;
-    private ClientThread clientThread;
+    private static final int REQUEST_ENABLE_BT = 0; //>=0 for run onActivityResult from startActivityForResult
+    private static final String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
+    private static final String SERVICE_NAME = "Local RBot Android Server $key: hello berzin klapeyron$"; //имя приложения сервера (для проверки входящих блютуз-запросов)
+
+    BluetoothAdapter bluetoothAdapter; //локальный БТ адаптер
+    private Set<BluetoothDevice> pairedDevices; //спаренные девайсы
+    private BluetoothDevice clientDevice; //девайс клиента (для восстановления связи при потере сокета)
+    private BluetoothSocket clientSocket; //канал соединения с последним клиентом
+    AcceptThread acceptThread; //поток для серверной прослушки запросов на БТ-соединение
+//    ConnectedThread connectedThread; //поток для принятия кооринат цели и отправления данных
 
     ru.rbot.android.bridge.service.robotcontroll.robots.Robot robot;
     RobotWrap robotWrap;
@@ -77,31 +84,35 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         serverActivityState = ACTIVITY_STATE_MAIN_XML;
 
-        Log.i(TAG,"OnCreate()");
+        Log.i(TAG, "OnCreate()");
 
         initConstructor();
 
+        robotWrap = new RobotWrap(this);
+        taskHandler = new TaskHandler(link);
+
         setClientConnectionState("hasn't been connected");
 
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        pairedDevices = bluetoothAdapter.getBondedDevices(); //получаем список сопряженных устройств
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {
-                robotWrap = new RobotWrap(this);
-                taskHandler = new TaskHandler(link);
-                serverThread = new ServerThread(communicatorService);
-                serverThread.start();
+                initConstructor();
+                acceptThread = new AcceptThread();
+                acceptThread.start(); //запускаем серверную прослушку входящих БТ запросов
             } else {
+                //start BT
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, MY_BLUETOOTH_ENABLE_REQUEST_ID);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
+        } else {
+            //TODO device does not support BT
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        serverThread = new ServerThread(communicatorService);
-        serverThread.start();
     }
 
     @Override
@@ -109,11 +120,12 @@ public class MainActivity extends Activity {
         if (resultCode == RESULT_OK) {
             robotWrap = new RobotWrap(this);
             taskHandler = new TaskHandler(link);
-
-            serverThread = new ServerThread(communicatorService);
-            serverThread.start();
+            acceptThread = new AcceptThread();
+            acceptThread.start(); //запускаем серверную прослушку входящих БТ запросов
         }
         if (resultCode == RESULT_CANCELED) {
+            robotWrap = new RobotWrap(this);
+            taskHandler = new TaskHandler(link);
             setServerState("bluetooth off");
             setRobotConnectionState("bluetooth off");
             setClientConnectionState("bluetooth off");
@@ -181,10 +193,20 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
+                    Log.i(TAG,"1");
                     int fY = Integer.parseInt(editTextFinishY.getText().toString());
                     int fX = Integer.parseInt(editTextFinishX.getText().toString());
+                    Log.i(TAG,"2");
                     taskHandler.setTask(fX, fY);
-                } catch (ControllerException e) {}
+                } catch (ControllerException e) {e.printStackTrace();}
+            }
+        });
+
+        final Button buttonSendIsReady = (Button) findViewById(R.id.buttonIsReady);
+        buttonSendIsReady.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callBackWhatServerIsReady();
             }
         });
     }
@@ -212,37 +234,6 @@ public class MainActivity extends Activity {
         }
         return false;
     }
-
-    private final CommunicatorService communicatorService = new CommunicatorService() {
-        @Override
-        public Communicator createCommunicatorThread(BluetoothSocket socket) {
-            return new CommunicatorImpl(socket, new CommunicatorImpl.CommunicationListener() {
-                @Override
-                public void onMessage(final String message) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textViewClientConnectionState.setText(message); // просмотр строк сообщений
-                            setClientConnectionState(message);
-                            String[] recievedMessage = message.split("/", 3);
-                            Log.i(MainActivity.TAG,"Message:  "+recievedMessage[0]+" "+recievedMessage[1]+" "+recievedMessage[2]);
-                            int fX = Integer.parseInt(recievedMessage[1]);
-                            int fY = Integer.parseInt(recievedMessage[2]);
-                            Log.i(MainActivity.TAG,"finish X: "+fX);
-                            Log.i(MainActivity.TAG,"finish Y: "+fY);
-                            editTextFinishX.setText(recievedMessage[1]);
-                            editTextFinishY.setText(recievedMessage[2]);
-                            try {
-                                taskHandler.setTask(fX, fY);
-                            } catch (ControllerException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    };
 
     public void displayRobotPosition() {
         switch(serverActivityState) {
@@ -276,7 +267,7 @@ public class MainActivity extends Activity {
 
     public void makeDiscoverable(View view) {
         Intent i = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        i.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+        i.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
         startActivity(i);
     }
 
@@ -299,29 +290,158 @@ public class MainActivity extends Activity {
 
 
 
-  /*      Button btnTextSpeech = (Button) findViewById(R.id.buttonTextSpeech);
-        btnTextSpeech.setOnClickListener(new View.OnClickListener(){
-            @Override
-        public void onClick(View v){
-                ttsManager.Greeting();
-            }
-        });*/
-    /*@Override
-    public void onPause() {
-        super.onPause();
-        bluetoothAdapter.cancelDiscovery();
 
-        if (discoverDevicesReceiver != null) {
+
+
+
+    //братный звонок, что сервер принял синал и готов к выполнению задания
+    private void callBackWhatServerIsReady() {
+        ConnectedThread connectedThread = new ConnectedThread(clientSocket);
+        connectedThread.write(("/ready/0/0/").getBytes());
+        Log.i(TAG,"callBackWhatServerIsReady");
+        connectedThread.start();
+    }
+
+    private class AcceptThread extends Thread {
+        private final BluetoothServerSocket mmServerSocket;
+
+        public AcceptThread() {
+            Log.i(TAG, "AcceptThread.Constructor()");
+            // Use a temporary object that is later assigned to mmServerSocket,
+            // because mmServerSocket is final
+            BluetoothServerSocket tmp = null;
             try {
-                unregisterReceiver(discoverDevicesReceiver);
-            } catch (Exception e) {
-                Log.d("MainActivity", "Не удалось отключить ресивер " + discoverDevicesReceiver);
+                // MY_UUID is the app's UUID string, also used by the client code
+                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, java.util.UUID.fromString(UUID));
+            } catch (IOException e) { }
+            mmServerSocket = tmp;
+        }
+
+        public void run() {
+            Log.i(TAG, "AcceptThread.run()");
+            BluetoothSocket socket = null;
+            // Keep listening until exception occurs or a socket is returned
+            while (true) {
+                Log.i(TAG, "AcceptThread while(true) BEFORE");
+                try {
+                    Log.i(TAG, "1");
+                    socket = mmServerSocket.accept();
+                    Log.i(TAG, "2");
+                } catch (IOException e) {
+                    Log.i(TAG, "3");
+                    break;
+                }
+                Log.i(TAG, "4");
+                // If a connection was accepted
+                if (socket != null) {
+                    clientDevice = socket.getRemoteDevice(); //запоминаем клиента
+                    clientSocket = socket; //запоминаем текущий рабочий сокет с клиентом
+                    // Do work to manage the connection (in a separate thread)
+                    //        manageConnectedSocket(socket);
+                    Log.i("TAG", "CONNECTED--------------------->>>>>>>"); //TODO ответить клиенту что сервер готов к работе и ждать координат
+                    callBackWhatServerIsReady();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setClientConnectionState("Saw customer"); //клиент выбра сервер но еще не задал задачи
+                        }
+                    });
+                    try {
+                        mmServerSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                }
+            }
+            Log.i(TAG, "AcceptThread.run() finished");
+        }
+
+        /** Will cancel the listening socket, and cause the thread to finish */
+        public void cancel() {
+            try {
+                mmServerSocket.close();
+            } catch (IOException e) { }
+        }
+    }
+
+
+
+    private class ConnectedThread extends Thread {
+        private final BluetoothSocket mmSocket;
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
+
+        public ConnectedThread(BluetoothSocket socket) {
+            mmSocket = socket;
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            // Get the input and output streams, using temp objects because
+            // member streams are final
+            try {
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            } catch (IOException e) { }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+        }
+
+        public void run() {
+            byte[] buffer = new byte[1024];  // buffer store for the stream
+            int bytes; // bytes returned from read()
+
+            // Keep listening to the InputStream until an exception occurs
+            while (true) {
+                try {
+                    // Read from the InputStream
+                    bytes = mmInStream.read(buffer);
+                    final String str = new String(buffer,"UTF-8");
+                    Log.i(TAG,"reading:  "+str);
+                    String[] a = str.split("/");
+                    Log.i(TAG,"!"+a[0]+"!"+a[1]+"!"+a[2]+"!"+a[3]);
+                    final String key = a[1];
+                    if (key.equals("task")) {
+                        final String X = a[2];
+                        final String Y = a[3];
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                editTextFinishX.setText(X);
+                                editTextFinishY.setText(Y);
+                            }
+                        });
+                        Log.i(TAG, "setTask now");
+                        int fY = Integer.parseInt(X.toString());
+                        int fX = Integer.parseInt(Y.toString());
+                        Log.i(TAG,""+fX+" "+fY);
+                        taskHandler.setTask(fX,fY);
+                    }
+                    // Send the obtained bytes to the UI activity
+                    //        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                } catch (IOException e) {
+                    Log.i(TAG,"IOException");
+                    break;
+                } catch (ControllerException e) {
+                    e.printStackTrace();
+                    Log.i(TAG,"ControllerException");
+                }
             }
         }
 
-        if (clientThread != null) {
-            clientThread.cancel();
+        /* Call this from the main activity to send data to the remote device */
+        public void write(byte[] bytes) {
+            try {
+                mmOutStream.write(bytes);
+            } catch (IOException e) { }
         }
-        if (serverThread != null) serverThread.cancel();
-    }*/
+
+        /* Call this from the main activity to shutdown the connection */
+        public void cancel() {
+            try {
+                mmSocket.close();
+            } catch (IOException e) { }
+        }
+    }
 }

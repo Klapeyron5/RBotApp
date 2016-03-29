@@ -40,6 +40,7 @@ public class TaskHandler {
      * @param fY target Y
      */
     public void setTask(int fX, int fY) throws ControllerException {
+        Log.i(MainActivity.TAG,"SetTask: X: "+fX+"  Y: "+fY);
         robotWrap.setStartCoordinatesByServerEditText(); //find out current robot coordinates
         navigation.setStart(robotWrap.currentCellY,robotWrap.currentCellX);
         navigation.setFinish(fY,fX);
@@ -58,9 +59,9 @@ public class TaskHandler {
 
    //     pathCommandsForRobot = new ArrayList<>();
    //     arrayInList();//TODO
-
-        TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
-        taskThread.start();
+            //ДЛЯ ЕЗДЫ РОБОТА
+   //     TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
+   //     taskThread.start();
     }
 
     /**

@@ -171,8 +171,7 @@ public class MainActivity extends Activity {
         buttonStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO //current state is wrong (coordinates)
-                taskHandler.runningThread.interrupt();
+                stopRiding();
             }
         });
 
@@ -272,6 +271,11 @@ public class MainActivity extends Activity {
                 }
                 break;
         }
+    }
+
+    public void stopRiding() {
+        taskHandler.runningLowLevelThread.interrupt();
+        taskHandler.runningLowLevelThread.interrupt();
     }
 
     public void makeDiscoverable(View view) {

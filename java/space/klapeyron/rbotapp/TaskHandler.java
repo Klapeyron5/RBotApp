@@ -59,7 +59,8 @@ public class TaskHandler {
 
    //     pathCommandsForRobot = new ArrayList<>();
    //     arrayInList();//TODO
-            //ДЛЯ ЕЗДЫ РОБОТА
+
+        //TODO    //ДЛЯ ЕЗДЫ РОБОТА
    //     TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
    //     taskThread.start();
     }

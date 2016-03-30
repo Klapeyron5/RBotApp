@@ -262,7 +262,7 @@
                     android:layout_column="3"
                     android:layout_weight="1"
                     android:layout_gravity="right|center_vertical"
-                    android:text="0" />
+                    android:text="5" />
 
                 <EditText
                     android:layout_width="60dp"
@@ -273,7 +273,7 @@
                     android:layout_column="2"
                     android:layout_weight="1"
                     android:layout_gravity="left|center_vertical"
-                    android:text="0" />
+                    android:text="3" />
             </FrameLayout>
 
             <FrameLayout

@@ -18,7 +18,8 @@ public class TaskHandler {
     /**
      * Link to now executable Thread from TaskHandler threads, if robot is riding to target
      */
-    public Thread runningThread;
+    public Thread runningLowLevelThread;
+    public Thread runningTaskThread;
 
     private final static float SQUARE_WIDTH = 0.5f;
 
@@ -61,8 +62,9 @@ public class TaskHandler {
    //     arrayInList();//TODO
 
         //TODO    //ДЛЯ ЕЗДЫ РОБОТА
-   //     TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
-   //     taskThread.start();
+        TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
+        runningTaskThread = taskThread;
+        taskThread.start();
     }
 
     /**
@@ -131,7 +133,7 @@ public class TaskHandler {
                 });
             }
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
-            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath -startPath));
+            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath - startPath));
             mainActivity.TTS.stopMove();
         }
     }
@@ -139,7 +141,7 @@ public class TaskHandler {
     /**
      * Starts moving on straight line with size straightLineCoefficient*SQUARE_WIDTH.
      * Control is passed to {@link space.klapeyron.rbotapp.TaskHandler.ForwardThread}.
-     * Link to new Thread is created in TaskHandler.runningThread
+     * Link to new Thread is created in TaskHandler.runningLowLevelThread
      * @param straightLineCoefficient number of squares in straight line
      */
     private void distanceForward(int straightLineCoefficient) {
@@ -160,44 +162,44 @@ public class TaskHandler {
             straightLineCoefficient--;*/
             if (straightLineCoefficient > 0) {
                 ForwardThread forwardThread = new ForwardThread(straightLineCoefficient);
-                runningThread = forwardThread;
+                runningLowLevelThread = forwardThread;
                 forwardThread.start();
                 try {
                     forwardThread.join();
                 } catch (InterruptedException e) {}
-                runningThread = null;
+                runningLowLevelThread = null;
             }
     //    }
     }
 
     private void turn(float angle) {
         TurnThread turnThread = new TurnThread(angle);
-        runningThread = turnThread;
+        runningLowLevelThread = turnThread;
         turnThread.start();
         try {
             turnThread.join();
         } catch (InterruptedException e) {}
-        runningThread = null;
+        runningLowLevelThread = null;
     }
 
     private void turnLeft() {
         LeftThread leftThread = new LeftThread();
-        runningThread = leftThread;
+        runningLowLevelThread = leftThread;
         leftThread.start();
         try {
             leftThread.join();
         } catch (InterruptedException e) {}
-        runningThread = null;
+        runningLowLevelThread = null;
     }
 
     private void turnRight() {
         RightThread rightThread = new RightThread();
-        runningThread = rightThread;
+        runningLowLevelThread = rightThread;
         rightThread.start();
         try {
             rightThread.join();
         } catch (InterruptedException e) {}
-        runningThread = null;
+        runningLowLevelThread = null;
     }
 
     class StartingForwardThread extends Thread {

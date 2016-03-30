@@ -185,7 +185,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 //TODO //current state is wrong (coordinates)
-                taskHandler.runningThread.interrupt();
+                stopRiding();
             }
         });
 
@@ -264,6 +264,11 @@ public class MainActivity extends Activity {
                 }
                 break;
         }
+    }
+
+    public void stopRiding() {
+        taskHandler.runningLowLevelThread.interrupt();
+        taskHandler.runningLowLevelThread.interrupt();
     }
 
     public void makeDiscoverable(View view) {
@@ -418,6 +423,11 @@ public class MainActivity extends Activity {
                         int fX = Integer.parseInt(Y.toString());
                         Log.i(TAG,""+fX+" "+fY);
                         taskHandler.setTask(fX,fY);
+
+                        if (key.equals("stop")) {
+                            TTS.stopMove();
+                            stopRiding();
+                        }
                     }
                     // Send the obtained bytes to the UI activity
                     //        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();

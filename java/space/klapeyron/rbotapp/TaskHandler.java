@@ -40,7 +40,7 @@ public class TaskHandler {
      * @param fY target Y
      */
     public void setTask(int fX, int fY) throws ControllerException {
-        Log.i(MainActivity.TAG,"SetTask: X: "+fX+"  Y: "+fY);
+        Log.i(MainActivity.TAG, "SetTask: X: " + fX + "  Y: " + fY);
         robotWrap.setStartCoordinatesByServerEditText(); //find out current robot coordinates
         navigation.setStart(robotWrap.currentCellY,robotWrap.currentCellX);
         navigation.setFinish(fY,fX);
@@ -71,6 +71,7 @@ public class TaskHandler {
     class TaskThread extends Thread {
         @Override
         public void run() {
+            mainActivity.TTS.startMove();
             synchronized (this) {
                 mainActivity.runOnUiThread(new Runnable() {
                     @Override
@@ -131,6 +132,7 @@ public class TaskHandler {
             }
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath -startPath));
+            mainActivity.TTS.stopMove();
         }
     }
 

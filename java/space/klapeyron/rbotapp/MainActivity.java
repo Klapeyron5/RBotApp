@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
     MainActivity link = this;
     InteractiveMapView interactiveMapView;
     TaskHandler taskHandler;
-    TTSManager ttsManager = null;
+    TTSManager TTS = new TTSManager() ;
 
 
     //customizing server interface
@@ -87,6 +87,7 @@ public class MainActivity extends Activity {
         Log.i(TAG, "OnCreate()");
 
         initConstructor();
+        TTS.init(this);
 
         robotWrap = new RobotWrap(this);
         taskHandler = new TaskHandler(link);

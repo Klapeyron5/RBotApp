@@ -94,4 +94,12 @@ public class TTSManager {
         else
             Log.e("error", "TTS Not Initialized");
     }
+
+    public void stopMove() {
+
+        if (isLoaded)
+            mTts.speak("I have stopped.", TextToSpeech.QUEUE_FLUSH, null);
+        else
+            Log.e("error", "TTS Not Initialized");
+    }
 }

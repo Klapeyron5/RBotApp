@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 import ru.rbot.android.bridge.service.robotcontroll.exceptions.ControllerException;
@@ -31,11 +31,10 @@ public class MainActivity extends Activity {
     public static final String SERVER_EXECUTING_TASK = "executing task";
 
     private String serverActivityState;
-    public static final  String ACTIVITY_STATE_MAIN_XML = "main.xml";
-    public static final  String ACTIVITY_STATE_INTERACTIVE_MAP = "interactive map";
+    private static final  String ACTIVITY_STATE_MAIN_XML = "main.xml";
+    private static final  String ACTIVITY_STATE_INTERACTIVE_MAP = "interactive map";
 
     public String robotConnectionState;
-    public static final String OnConnectedRobotState = "connected";
 
     public String clientConnectionState;
 
@@ -43,18 +42,15 @@ public class MainActivity extends Activity {
 
     private static final int REQUEST_ENABLE_BT = 0; //>=0 for run onActivityResult from startActivityForResult
     private static final String UUID = "e91521df-92b9-47bf-96d5-c52ee838f6f6";
-    private static final String SERVICE_NAME = "Local RBot Android Server $key: hello berzin klapeyron$"; //имя приложения сервера (для проверки входящих блютуз-запросов)
+    private static final String SERVICE_NAME = "RBotApp"; //имя приложения сервера (для проверки входящих блютуз-запросов)
 
     BluetoothAdapter bluetoothAdapter; //локальный БТ адаптер
     private Set<BluetoothDevice> pairedDevices; //спаренные девайсы
     private BluetoothDevice clientDevice; //девайс клиента (для восстановления связи при потере сокета)
     private BluetoothSocket clientSocket; //канал соединения с последним клиентом
-    AcceptThread acceptThread; //поток для серверной прослушки запросов на БТ-соединение
-//    ConnectedThread connectedThread; //поток для принятия кооринат цели и отправления данных
 
     ru.rbot.android.bridge.service.robotcontroll.robots.Robot robot;
     RobotWrap robotWrap;
-
     MainActivity link = this;
     InteractiveMapView interactiveMapView;
     TaskHandler taskHandler;
@@ -88,19 +84,20 @@ public class MainActivity extends Activity {
 
         initConstructor();
         TTS.init(this);
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        pairedDevices = bluetoothAdapter.getBondedDevices(); //получаем список сопряженных устройств
+        AcceptIncomingConnection acceptIncomingConnection = new AcceptIncomingConnection();
+        acceptIncomingConnection.start(); //запускаем серверную прослушку входящих БТ запросов
 
         robotWrap = new RobotWrap(this);
         taskHandler = new TaskHandler(link);
 
         setClientConnectionState("hasn't been connected");
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        pairedDevices = bluetoothAdapter.getBondedDevices(); //получаем список сопряженных устройств
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.isEnabled()) {
+                Log.i(TAG, "Bluetooth.isEnable");
                 initConstructor();
-                acceptThread = new AcceptThread();
-                acceptThread.start(); //запускаем серверную прослушку входящих БТ запросов
             } else {
                 //start BT
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -121,8 +118,10 @@ public class MainActivity extends Activity {
         if (resultCode == RESULT_OK) {
             robotWrap = new RobotWrap(this);
             taskHandler = new TaskHandler(link);
-            acceptThread = new AcceptThread();
-            acceptThread.start(); //запускаем серверную прослушку входящих БТ запросов
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            pairedDevices = bluetoothAdapter.getBondedDevices(); //получаем список сопряженных устройств
+            AcceptIncomingConnection acceptIncomingConnection = new AcceptIncomingConnection();
+            acceptIncomingConnection.start(); //запускаем серверную прослушку входящих БТ запросов
         }
         if (resultCode == RESULT_CANCELED) {
             robotWrap = new RobotWrap(this);
@@ -207,7 +206,6 @@ public class MainActivity extends Activity {
         buttonSendIsReady.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                callBackWhatServerIsReady();
             }
         });
     }
@@ -269,6 +267,9 @@ public class MainActivity extends Activity {
     public void stopRiding() {
         taskHandler.runningLowLevelThread.interrupt();
         taskHandler.runningLowLevelThread.interrupt();
+        //TODO
+        setServerState(SERVER_WAITING_NEW_TASK);
+        finishedWorkWithBtClient();
     }
 
     public void makeDiscoverable(View view) {
@@ -295,164 +296,122 @@ public class MainActivity extends Activity {
 
 
 
-
-
-
-
-
-    //братный звонок, что сервер принял синал и готов к выполнению задания
-    private void callBackWhatServerIsReady() {
-        ConnectedThread connectedThread = new ConnectedThread(clientSocket);
-        connectedThread.write(("/ready/0/0/").getBytes());
-        Log.i(TAG,"callBackWhatServerIsReady");
-        connectedThread.start();
-    }
-
-    private class AcceptThread extends Thread {
-        private final BluetoothServerSocket mmServerSocket;
-
-        public AcceptThread() {
-            Log.i(TAG, "AcceptThread.Constructor()");
-            // Use a temporary object that is later assigned to mmServerSocket,
-            // because mmServerSocket is final
-            BluetoothServerSocket tmp = null;
-            try {
-                // MY_UUID is the app's UUID string, also used by the client code
-                tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, java.util.UUID.fromString(UUID));
-            } catch (IOException e) { }
-            mmServerSocket = tmp;
-        }
-
-        public void run() {
-            Log.i(TAG, "AcceptThread.run()");
-            BluetoothSocket socket = null;
-            // Keep listening until exception occurs or a socket is returned
-            while (true) {
-                Log.i(TAG, "AcceptThread while(true) BEFORE");
-                try {
-                    Log.i(TAG, "1");
-                    socket = mmServerSocket.accept();
-                    Log.i(TAG, "2");
-                } catch (IOException e) {
-                    Log.i(TAG, "3");
-                    break;
-                }
-                Log.i(TAG, "4");
-                // If a connection was accepted
-                if (socket != null) {
-                    clientDevice = socket.getRemoteDevice(); //запоминаем клиента
-                    clientSocket = socket; //запоминаем текущий рабочий сокет с клиентом
-                    // Do work to manage the connection (in a separate thread)
-                    //        manageConnectedSocket(socket);
-                    Log.i("TAG", "CONNECTED--------------------->>>>>>>"); //TODO ответить клиенту что сервер готов к работе и ждать координат
-                    callBackWhatServerIsReady();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setClientConnectionState("Saw customer"); //клиент выбра сервер но еще не задал задачи
-                        }
-                    });
-                    try {
-                        mmServerSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                }
-            }
-            Log.i(TAG, "AcceptThread.run() finished");
-        }
-
-        /** Will cancel the listening socket, and cause the thread to finish */
-        public void cancel() {
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) { }
+    /**
+     * Send message to client, if you not send current coordinates, set X = 0, Y = 0.
+     * @param key "ready": robot found client and wait target X,Y;
+     *            "currentXY":  X and Y is current robot coordinates;
+     *            "target": robot reached target
+     * @param X current robot X coordinate
+     * @param Y current robot Y coordinate*/
+    private void sendMessage(String key, int X, int Y) {
+        String str = new String("/"+key+"/"+Integer.toString(X)+"/"+Integer.toString(Y)+"/");
+        byte[] b = str.getBytes();
+        try {
+            (clientSocket.getOutputStream()).write(b);
+            Log.i(TAG, new String(b));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-
-
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            // Get the input and output streams, using temp objects because
-            // member streams are final
-            try {
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
-        }
-
+    private class AcceptIncomingConnection extends Thread {
+        @Override
         public void run() {
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
+            Log.i(TAG,"AcceptIncomingMessage");
+            acceptIncomingConnectionMethod();
+        }
+    }
 
-            // Keep listening to the InputStream until an exception occurs
-            while (true) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
-                    final String str = new String(buffer,"UTF-8");
-                    Log.i(TAG,"reading:  "+str);
-                    String[] a = str.split("/");
-                    Log.i(TAG,"!"+a[0]+"!"+a[1]+"!"+a[2]+"!"+a[3]);
-                    final String key = a[1];
-                    if (key.equals("task")) {
-                        final String X = a[2];
-                        final String Y = a[3];
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                editTextFinishX.setText(X);
-                                editTextFinishY.setText(Y);
-                            }
-                        });
-                        Log.i(TAG, "setTask now");
-                        int fY = Integer.parseInt(X.toString());
-                        int fX = Integer.parseInt(Y.toString());
-                        Log.i(TAG,""+fX+" "+fY);
-                        taskHandler.setTask(fX,fY);
+    private class ReadIncomingMessage extends Thread {
+        @Override
+        public void run() {
+            readIncomingMessageMethod();
+        }
+    }
 
-                        if (key.equals("stop")) {
-                            TTS.stopMove();
-                            stopRiding();
-                        }
-                    }
-                    // Send the obtained bytes to the UI activity
-                    //        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                } catch (IOException e) {
-                    Log.i(TAG,"IOException");
-                    break;
-                } catch (ControllerException e) {
-                    e.printStackTrace();
-                    Log.i(TAG,"ControllerException");
-                }
+    private void acceptIncomingConnectionMethod() {
+        BluetoothServerSocket serverSocket = null;
+        try {
+            Log.i(TAG, "1");
+            serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, java.util.UUID.fromString(UUID));
+            clientSocket = serverSocket.accept();
+            Log.i(TAG, "2");
+        } catch (IOException e) {
+            Log.i(TAG, "3");
+        }
+        Log.i(TAG, "4");
+        if (clientSocket != null)
+            clientDevice = clientSocket.getRemoteDevice(); //запоминаем клиента
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setClientConnectionState("Connected");
             }
+        });
+        sendMessage("ready", 0, 0);
+        ReadIncomingMessage readIncomingMessage = new ReadIncomingMessage();
+        readIncomingMessage.start();
+        try {
+            Log.i(TAG, "5");
+            serverSocket.close();
+        } catch (IOException e) {
+            Log.i(TAG, "6");
         }
+    }
 
-        /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) { }
-        }
+    private void readIncomingMessageMethod() {
+        InputStream inputStream = null;
+        try {
+            inputStream = clientSocket.getInputStream();
+        } catch (IOException e) {}
 
-        /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
+        byte[] buffer = new byte[1024];  // buffer store for the stream
+        int bytes; // bytes returned from read()
+        try {
+            bytes = inputStream.read(buffer);
+        } catch (IOException e) {}
+        String str = null;
+        try {
+            str = new String(buffer,"UTF-8");
+        } catch (UnsupportedEncodingException e) {}
+        Log.i(TAG, "reading:  " + str);
+        String[] a = str.split("/");
+        Log.i(TAG, "!" + a[0] + "!" + a[1] + "!" + a[2] + "!" + a[3]);
+        final String key = a[1];
+        if (key.equals("task")) {
+            final String X = a[2];
+            final String Y = a[3];
+            int fY = Integer.parseInt(X.toString());
+            int fX = Integer.parseInt(Y.toString());
             try {
-                mmSocket.close();
-            } catch (IOException e) { }
+                taskHandler.setTask(fX,fY);
+            } catch (ControllerException e) {
+                e.printStackTrace();
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setServerState(SERVER_EXECUTING_TASK);
+                    setClientConnectionState("task: " + X + " " + Y);
+                }
+            });
         }
+        if (key.equals("stop")) {
+            stopRiding();
+            finishedWorkWithBtClient();
+        }
+    }
+
+    private void finishedWorkWithBtClient() {
+        sendMessage("target", 0, 0);
+        //start listening new client task
+        try {
+            if (clientSocket != null)
+                clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        AcceptIncomingConnection acceptIncomingConnection = new AcceptIncomingConnection();
+        acceptIncomingConnection.start();
     }
 }

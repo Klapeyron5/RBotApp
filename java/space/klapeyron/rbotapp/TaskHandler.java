@@ -62,9 +62,9 @@ public class TaskHandler {
    //     arrayInList();//TODO
 
         //TODO    //ДЛЯ ЕЗДЫ РОБОТА
-    //    TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
-     //   runningTaskThread = taskThread;
-    //    taskThread.start();
+        TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
+        runningTaskThread = taskThread;
+        taskThread.start();
     }
 
     /**
@@ -134,8 +134,8 @@ public class TaskHandler {
             }
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
             Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath - startPath));
-            mainActivity.stopRiding();
             mainActivity.TTS.stopMove();
+            mainActivity.stopRiding();
         }
     }
 

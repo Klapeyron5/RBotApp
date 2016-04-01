@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     private Set<BluetoothDevice> pairedDevices; //спаренные девайсы
     private BluetoothDevice clientDevice; //девайс клиента (для восстановления связи при потере сокета)
     private BluetoothSocket clientSocket; //канал соединения с последним клиентом
+    private ReadIncomingMessage readIncomingMessage;
 
     ru.rbot.android.bridge.service.robotcontroll.robots.Robot robot;
     RobotWrap robotWrap;
@@ -265,10 +266,17 @@ public class MainActivity extends Activity {
     }
 
     public void stopRiding() {
-        taskHandler.runningLowLevelThread.interrupt();
-        taskHandler.runningLowLevelThread.interrupt();
+        if (taskHandler.runningLowLevelThread != null)
+            taskHandler.runningLowLevelThread.interrupt();
+        if(taskHandler.runningTaskThread != null)
+            taskHandler.runningTaskThread.interrupt();
         //TODO
-        setServerState(SERVER_WAITING_NEW_TASK);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setServerState(SERVER_WAITING_NEW_TASK);
+            }
+        });
         finishedWorkWithBtClient();
     }
 
@@ -307,7 +315,9 @@ public class MainActivity extends Activity {
         String str = new String("/"+key+"/"+Integer.toString(X)+"/"+Integer.toString(Y)+"/");
         byte[] b = str.getBytes();
         try {
+            Log.i(TAG, "send 1");
             (clientSocket.getOutputStream()).write(b);
+            Log.i(TAG, "send 2");
             Log.i(TAG, new String(b));
         } catch (IOException e) {
             e.printStackTrace();
@@ -349,7 +359,8 @@ public class MainActivity extends Activity {
             }
         });
         sendMessage("ready", 0, 0);
-        ReadIncomingMessage readIncomingMessage = new ReadIncomingMessage();
+     //   ReadIncomingMessage readIncomingMessage = new ReadIncomingMessage();
+        readIncomingMessage = new ReadIncomingMessage();
         readIncomingMessage.start();
         try {
             Log.i(TAG, "5");
@@ -372,45 +383,67 @@ public class MainActivity extends Activity {
         } catch (IOException e) {}
         String str = null;
         try {
-            str = new String(buffer,"UTF-8");
-        } catch (UnsupportedEncodingException e) {}
-        Log.i(TAG, "reading:  " + str);
-        String[] a = str.split("/");
-        Log.i(TAG, "!" + a[0] + "!" + a[1] + "!" + a[2] + "!" + a[3]);
-        final String key = a[1];
-        if (key.equals("task")) {
-            final String X = a[2];
-            final String Y = a[3];
-            int fY = Integer.parseInt(X.toString());
-            int fX = Integer.parseInt(Y.toString());
             try {
-                taskHandler.setTask(fX,fY);
-            } catch (ControllerException e) {
-                e.printStackTrace();
+                str = new String(buffer, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
             }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    setServerState(SERVER_EXECUTING_TASK);
-                    setClientConnectionState("task: " + X + " " + Y);
+            Log.i(TAG, "in reading " + readIncomingMessage.getId());
+            Log.i(TAG, "reading:  " + str);
+            String[] a = str.split("/");
+            Log.i(TAG, "!" + a[0] + "!" + a[1] + "!" + a[2] + "!" + a[3]);
+            final String key = a[1];
+            if ((key.equals("task"))&&(serverState == SERVER_WAITING_NEW_TASK)) {
+                final String X = a[2];
+                final String Y = a[3];
+                int fX = Integer.parseInt(X.toString());
+                int fY = Integer.parseInt(Y.toString());
+                try {
+                    taskHandler.setTask(fX,fY);
+                } catch (ControllerException e) {
+                    e.printStackTrace();
                 }
-            });
-        }
-        if (key.equals("stop")) {
-            stopRiding();
-            finishedWorkWithBtClient();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setServerState(SERVER_EXECUTING_TASK);
+                        setClientConnectionState("task: " + X + " " + Y);
+                    }
+                });
+            }
+            if (!key.equals("stop")) {
+            //   ReadIncomingMessage readIncomingMessage = new ReadIncomingMessage();
+                readIncomingMessage = new ReadIncomingMessage();
+                readIncomingMessage.start();
+            }
+            if (key.equals("stop")) {
+                Log.i(TAG, "key == stop");
+                stopRiding();
+            }
+        } catch(IndexOutOfBoundsException e) {
+            Log.i(TAG,"IndexOutOfBoundsException");
         }
     }
 
     private void finishedWorkWithBtClient() {
         sendMessage("target", 0, 0);
         //start listening new client task
+        Log.i(TAG, "Close readIncomingMessage 1 "+ readIncomingMessage.getId());
+        if ((readIncomingMessage != null)&&(readIncomingMessage.isAlive())) {
+            readIncomingMessage.interrupt();
+            Log.i(TAG, "Close readIncomingMessage 2 "+ readIncomingMessage.getId());
+        }
         try {
-            if (clientSocket != null)
+            Log.i(TAG, "1f");
+            if (clientSocket.isConnected()) {
+                Log.i(TAG, "2f");
                 clientSocket.close();
+
+            }
         } catch (IOException e) {
+            Log.i(TAG, "3f");
             e.printStackTrace();
         }
+        Log.i(TAG, "4f");
         AcceptIncomingConnection acceptIncomingConnection = new AcceptIncomingConnection();
         acceptIncomingConnection.start();
     }

@@ -145,19 +145,6 @@
 
     </TableLayout>
 
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right">
-
-        <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Send Server Is REady"
-            android:id="@+id/buttonIsReady" />
-    </TableRow>
-
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -307,6 +294,14 @@
                 android:id="@+id/buttonStop"
                 android:layout_weight="1"
                 android:layout_gravity="left" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="set start"
+                android:id="@+id/buttonSetStart"
+                android:layout_weight="1" />
 
             <Button
                 style="?android:attr/buttonStyleSmall"

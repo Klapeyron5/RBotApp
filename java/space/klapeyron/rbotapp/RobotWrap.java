@@ -82,7 +82,7 @@ public class RobotWrap {
     /**
      * Set robot position
      * @param cellX current number of cell in X
-     * @param cellY current nymber of cell in Y
+     * @param cellY current number of cell in Y
      * @param direction current direction: 0 - positive on X, 1 - positive on Y, 2 - negative on X, 3 - negative on Y
      */
     public void setPosition(int cellX,int cellY,int direction) {

@@ -189,6 +189,14 @@ public class MainActivity extends Activity {
             }
         });
 
+        Button buttonSetStart = (Button) findViewById(R.id.buttonSetTask);
+        buttonSetStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                robotWrap.setStartCoordinatesByServerEditText();
+            }
+        });
+
         Button buttonSetTask = (Button) findViewById(R.id.buttonSetTask);
         buttonSetTask.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,13 +208,6 @@ public class MainActivity extends Activity {
                     Log.i(TAG,"2");
                     taskHandler.setTask(fX, fY);
                 } catch (ControllerException e) {e.printStackTrace();}
-            }
-        });
-
-        final Button buttonSendIsReady = (Button) findViewById(R.id.buttonIsReady);
-        buttonSendIsReady.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
             }
         });
     }
@@ -263,6 +264,7 @@ public class MainActivity extends Activity {
                 }
                 break;
         }
+        sendMessage("currentXY",robotWrap.currentCellX,robotWrap.currentCellY);
     }
 
     public void stopRiding() {
@@ -358,7 +360,7 @@ public class MainActivity extends Activity {
                 setClientConnectionState("Connected");
             }
         });
-        sendMessage("ready", 0, 0);
+        sendMessage("ready",robotWrap.currentCellX,robotWrap.currentCellY);
      //   ReadIncomingMessage readIncomingMessage = new ReadIncomingMessage();
         readIncomingMessage = new ReadIncomingMessage();
         readIncomingMessage.start();
@@ -398,7 +400,7 @@ public class MainActivity extends Activity {
                 int fX = Integer.parseInt(X.toString());
                 int fY = Integer.parseInt(Y.toString());
                 try {
-                    taskHandler.setTask(fX,fY);
+                    taskHandler.setTask(fX, fY);
                 } catch (ControllerException e) {
                     e.printStackTrace();
                 }

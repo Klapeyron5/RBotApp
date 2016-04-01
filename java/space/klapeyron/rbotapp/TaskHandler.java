@@ -15,6 +15,7 @@ public class TaskHandler {
     private MainActivity mainActivity;
     public RobotWrap robotWrap;
     private Navigation navigation;
+    public ArrayList<Integer> absolutePath;
     /**
      * Link to now executable Thread from TaskHandler threads, if robot is riding to target
      */
@@ -52,6 +53,7 @@ public class TaskHandler {
         Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
 
         path = navigation.getPathCommandsForRobot(); //get pathCommandsForRobot's commands
+        absolutePath = navigation.absolutePath;
 
         Log.i(MainActivity.TAG,"PATH");
 

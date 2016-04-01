@@ -264,7 +264,7 @@ public class MainActivity extends Activity {
                 }
                 break;
         }
-        sendMessage("currentXY",robotWrap.currentCellX,robotWrap.currentCellY);
+        sendMessage("currentXY", robotWrap.currentCellX, robotWrap.currentCellY);
     }
 
     public void stopRiding() {
@@ -309,12 +309,20 @@ public class MainActivity extends Activity {
     /**
      * Send message to client, if you not send current coordinates, set X = 0, Y = 0.
      * @param key "ready": robot found client and wait target X,Y;
+     *            "path": ideal path;
      *            "currentXY":  X and Y is current robot coordinates;
      *            "target": robot reached target
      * @param X current robot X coordinate
      * @param Y current robot Y coordinate*/
     private void sendMessage(String key, int X, int Y) {
         String str = new String("/"+key+"/"+Integer.toString(X)+"/"+Integer.toString(Y)+"/");
+        if (key.equals("path")) {
+            for(int i = 0;i<taskHandler.absolutePath.size();i++) {
+                str = str + Integer.toString(taskHandler.absolutePath.get(i));
+            }
+            str = str + "/";
+            Log.i(TAG,"str");
+        }
         byte[] b = str.getBytes();
         try {
             Log.i(TAG, "send 1");
@@ -394,6 +402,9 @@ public class MainActivity extends Activity {
             String[] a = str.split("/");
             Log.i(TAG, "!" + a[0] + "!" + a[1] + "!" + a[2] + "!" + a[3]);
             final String key = a[1];
+
+
+
             if ((key.equals("task"))&&(serverState == SERVER_WAITING_NEW_TASK)) {
                 final String X = a[2];
                 final String Y = a[3];
@@ -401,6 +412,7 @@ public class MainActivity extends Activity {
                 int fY = Integer.parseInt(Y.toString());
                 try {
                     taskHandler.setTask(fX, fY);
+                    sendMessage("path",robotWrap.currentCellX,robotWrap.currentCellY);
                 } catch (ControllerException e) {
                     e.printStackTrace();
                 }

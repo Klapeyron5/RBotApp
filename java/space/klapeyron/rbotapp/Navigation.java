@@ -85,11 +85,11 @@ public class Navigation {
                 Direction[i] = 2;
             }
         }
-        absolutePath = new ArrayList<Integer>(Direction[0]);
-        for(i=0;i<k;i++)
-            Log.i(MainActivity.TAG,Direction[i]+"");
-      //      System.out.println(Direction[i]);
-
+        absolutePath = new ArrayList<Integer>();
+        for(i=0;i<k;i++) {
+            Log.i(MainActivity.TAG, Direction[i] + "");
+            absolutePath.add(Direction[i]);
+        }
 
         //TODO //correct start odometryAngle
         pathCommandsForRobot.clear();

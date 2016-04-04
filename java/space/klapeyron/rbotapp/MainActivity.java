@@ -5,7 +5,11 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -135,6 +139,8 @@ public class MainActivity extends Activity {
     }
 
     private void initConstructor() {
+        registerReceiver(incomingPairRequestReceiver, new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
+
         textViewServerState = (TextView) findViewById(R.id.textViewServerState);
         textViewClientConnectionState = (TextView) findViewById(R.id.textViewClientConnectionState);
         textViewRobotConnectionState = (TextView) findViewById(R.id.textViewRobotConnectionState);
@@ -304,7 +310,24 @@ public class MainActivity extends Activity {
     }
 
 
-
+    private final BroadcastReceiver incomingPairRequestReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i("TAG", "incomingPairRequestReceiver");
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+                Log.i("TAG", "запрос на сопряжение");
+                BluetoothDevice dev = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                Log.i("TAG", "запрос с устройства: " + dev.getName());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    dev.setPairingConfirmation(true);
+                    Log.i("TAG", "спаривание успешно");
+                } else {
+                    Log.i("TAG", "невозможно автоматически произвести спаривание, версия ниже КИТКАТа");
+                }
+            }
+        }
+    };
 
     /**
      * Send message to client, if you not send current coordinates, set X = 0, Y = 0.

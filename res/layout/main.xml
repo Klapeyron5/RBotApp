@@ -248,8 +248,8 @@
                     android:id="@+id/editTextStartX"
                     android:layout_column="2"
                     android:layout_weight="1"
-                    android:layout_gravity="left|center_vertical"
-                    android:text="3" />
+                    android:layout_gravity="right|center_vertical"
+                    android:text="5" />
 
                 <EditText
                     android:layout_width="60dp"
@@ -259,8 +259,8 @@
                     android:id="@+id/editTextStartY"
                     android:layout_column="3"
                     android:layout_weight="1"
-                    android:layout_gravity="right|center_vertical"
-                    android:text="5" />
+                    android:layout_gravity="left|center_vertical"
+                    android:text="3" />
             </FrameLayout>
 
             <FrameLayout
@@ -298,6 +298,14 @@
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="set start"
+                android:id="@+id/buttonSetStart"
+                android:layout_weight="1" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:text="Set Task"
                 android:id="@+id/buttonSetTask"
                 android:layout_weight="1"/>

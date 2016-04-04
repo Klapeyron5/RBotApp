@@ -15,6 +15,7 @@ public class TaskHandler {
     private MainActivity mainActivity;
     public RobotWrap robotWrap;
     private Navigation navigation;
+    public ArrayList<Integer> absolutePath;
     /**
      * Link to now executable Thread from TaskHandler threads, if robot is riding to target
      */
@@ -41,6 +42,7 @@ public class TaskHandler {
      * @param fY target Y
      */
     public void setTask(int fX, int fY) throws ControllerException {
+        Log.i(MainActivity.TAG, "SetTask: X: " + fX + "  Y: " + fY);
         robotWrap.setStartCoordinatesByServerEditText(); //find out current robot coordinates
         navigation.setStart(robotWrap.currentCellY,robotWrap.currentCellX);
         navigation.setFinish(fY,fX);
@@ -51,6 +53,7 @@ public class TaskHandler {
         Log.i(MainActivity.TAG, "Finish coordinates: " + navigation.finish[0] + " " + navigation.finish[1]);
 
         path = navigation.getPathCommandsForRobot(); //get pathCommandsForRobot's commands
+        absolutePath = navigation.absolutePath;
 
         Log.i(MainActivity.TAG,"PATH");
 
@@ -60,6 +63,7 @@ public class TaskHandler {
    //     pathCommandsForRobot = new ArrayList<>();
    //     arrayInList();//TODO
 
+        //TODO    //ДЛЯ ЕЗДЫ РОБОТА
         TaskThread taskThread = new TaskThread(); //start to run on the pathCommandsForRobot
         runningTaskThread = taskThread;
         taskThread.start();
@@ -71,6 +75,7 @@ public class TaskHandler {
     class TaskThread extends Thread {
         @Override
         public void run() {
+            mainActivity.TTS.startMove();
             synchronized (this) {
                 mainActivity.runOnUiThread(new Runnable() {
                     @Override
@@ -130,7 +135,9 @@ public class TaskHandler {
                 });
             }
             Log.i(MainActivity.TAG, "setTask finish odometryPath " + mainActivity.robotWrap.odometryPath);
-            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath -startPath));
+            Log.i(MainActivity.TAG, "setTask finish difference " + (mainActivity.robotWrap.odometryPath - startPath));
+            mainActivity.TTS.stopMove();
+            mainActivity.stopRiding();
         }
     }
 
